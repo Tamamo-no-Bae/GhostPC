@@ -51,6 +51,7 @@ the log and a minidump, `ghostpc_crash.dmp`. Debug switches are `GHOSTPC_*` envi
 
 - jason098: reported the movie decoder crash fixed in the first release.
 - aknavj: the OpenNOD SDK used to build the Enemy Zoo.
+- Tamamo-no-Bae: For creating the port alongside Claude.
 
 StarCraft: Ghost is a trademark of Blizzard Entertainment. This is an unofficial fan project, not affiliated with
 or endorsed by Blizzard. The code is under the [MIT license](LICENSE).
