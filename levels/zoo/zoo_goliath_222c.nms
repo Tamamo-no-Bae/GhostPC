@@ -1,0 +1,40 @@
+; zoo_goliath_222c.nms -- GhostPC Enemy Zoo: goliath_222c.nms plus placeholders for the modes the cut Goliath
+; boss AI (cAIBossGoliath) plays that the 222c set lacks: run and idle from the regular Goliath (goliath.nms, same
+; 29-bone layout), knockback and blowback from the Goliath_232 boss's big hit (no Goliath has a blowback)
+; goliath.nms
+;
+; Nihilistic Motion Set file for the goliath 222c actor (06/26/03 - sgt)
+;
+
+stand				   goliath_standscan.nad	lowpriority variable
+
+walk					goliath_walkLookup.nad			movespeed
+turn180		      goliath_turn180Lookup.nad     endpause
+
+turnleft			goliath_turnLeft45.nad 
+turnright      goliath_turnRight45.nad
+
+hurt					goliath_Damage.nad		noloop variable
+
+deathslow			goliath_Death.nad				noloop endpause variable
+
+firestand         goliath_fireStand.nad
+recoilstand       goliath_fire.nad        noloop mix 
+
+;idle              goliath_standscan.nad	      noloop lowpriority fidget
+
+IKTURNLEFT        goliath_headTurnLeft.nad 
+IKTURNRIGHT       goliath_headTurnRight.nad
+ikaimdown			goliath_headPitchDown.nad
+ikaimup				goliath_headPitchUp.nad  
+
+; Leg IK tracks
+special1	goliath_leg_R_up.nad
+special2	goliath_leg_R_dw.nad
+special3	goliath_leg_L_up.nad
+special4	goliath_leg_L_dw.nad
+
+run				goliath_Walk.nad			movespeed
+idle			goliath_idle.nad			noloop lowpriority fidget
+knockback		goliathBoss_bigdamage.nad	noloop endpause nofadeout endtag
+blowback		goliathBoss_bigdamage.nad	noloop endpause nofadeout endtag

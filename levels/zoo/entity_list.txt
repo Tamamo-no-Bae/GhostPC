@@ -1,0 +1,309 @@
+side     template                             model                          AI                         hp shield  based on
+-        121_beacon                           beacon.nod                     PSIRECHARGER              100         beacon
+-        311_beacon                           beacon.nod                     PSIRECHARGER              100         beacon
+-        artemis_prop                         artemis.nod                    DEMOANIMS                             _actorProps
+-        beacon                               beacon.nod                     PSIRECHARGER              100         _actor
+-        dragoon_big_prop                     dragoon.nod                    DEMOANIMS                             dragoon_prop
+-        dragoon_prop                         dragoon.nod                    DEMOANIMS                             _ProtossProps
+-        firebat_prop                         firebat.nod                    DEMOANIMS                             _actorProps
+-        ghost_male_prop                      Ghost_male.nod                 DEMOANIMS                             _actorProps
+-        ghostSuit_pose                       nova.nod                       DEMOANIMS                             ghostSuit
+-        Goliath_blue                         goliath.nod                    DEMOANIMS                             Goliath_prop
+-        Goliath_prop                         goliath.nod                    DEMOANIMS                             _actorProps
+-        Goliath_prop_stand                   goliath.nod                    DEMOANIMS                             Goliath_prop
+-        Goliath_red                          goliath.nod                    DEMOANIMS                             Goliath_prop
+-        Goliath_test                         goliath_test.nod               DEMOANIMS                             Goliath_prop
+-        hauler_prop                          hauler.nod                     DEMOANIMS                             _actorProps
+-        haulerBoss_prop                      haulerBoss.nod                 DEMOANIMS                             _actorProps
+-        highTemplar_prop                     HighTemplar.nod                DEMOANIMS                             _ProtossProps
+-        hydralisk_alt_prop                   hydralisk_alt.nod              DEMOANIMS                             _ZergProps
+-        hydralisk_prop                       hydralisk.nod                  DEMOANIMS                             _ZergProps
+-        infantry_prop                        lightInfantry.nod              DEMOANIMS                             _actorProps
+-        infestedMarine_prop                  infestedTerran.nod             DEMOANIMS                             _ZergProps
+-        lurker_alt_prop                      lurker_alt.nod                 DEMOANIMS                             lurker_prop
+-        lurker_boss_prop                     lurker_boss.nod                DEMOANIMS                             _ZergProps
+-        lurker_prop                          lurker.nod                     DEMOANIMS                             _ZergProps
+-        marine1Tex_prop                      marine1Tex.nod                 DEMOANIMS                             _actorProps
+-        marine2Joe_prop                      marine2Joe.nod                 DEMOANIMS                             marine1Tex_prop
+-        mutalisk_prop                        mutalisk.nod                   DEMOANIMS                             _ZergProps
+-        nova_Bl_prop                         nova.nod                       DEMOANIMS                             ghostSuit_pose
+-        nova_Br_prop                         nova.nod                       DEMOANIMS                             ghostSuit_pose
+-        nova_ice_prop                        nova.nod                       DEMOANIMS                             ghostSuit_pose
+-        nova_previous_prop                   nova.nod                       DEMOANIMS                             ghostSuit_pose
+-        photonCannon_prop                    photonCannon.nod               DEMOANIMS                             _ProtossProps
+-        purifier_prop                        purifier.nod                   DEMOANIMS                             _ProtossProps
+-        reaver_prop                          reaver.nod                     DEMOANIMS                             _ProtossProps
+-        rebelLeader_prop                     rebelLeader.nod                DEMOANIMS                             _actorProps
+-        reese_prop                           rebelLeader.nod                DEMOANIMS                             rebelLeader_prop
+-        rhynadon_prop                        Rhynadon.nod                   DEMOANIMS                             _miscellaneousProps
+-        scourge_alt_prop                     scourge_tiny.nod               DEMOANIMS                             scourge_prop
+-        scourge_prop                         scourge.nod                    DEMOANIMS                             _ZergProps
+-        SCVcombo_prop                        scvCombo.nod                   DEMOANIMS                             _actorProps
+-        scvDriver_prop                       scvDriver.nod                  DEMOANIMS                             _actorProps
+-        siegeTank_prop                       siegeTank.nod                  DEMOANIMS                             _actorProps
+-        sniper_prop                          sniper.nod                     DEMOANIMS                             _actorProps
+-        spiderMine_prop                      spiderMine.nod                 DEMOANIMS                             _actorProps
+-        sunkenColony_prop                    sunkenColony.nod               DEMOANIMS                             _ZergProps
+-        Tanagazj_prop                        Tanagazj.nod                   DEMOANIMS                             darkTemplar_prop
+-        trooper_prop                         trooper.nod                    DEMOANIMS                             infantry_prop
+-        ultralisk_prop                       ultralisk.nod                  DEMOANIMS                             _ZergProps
+-        vulcan_prop                          vulcan.nod                     DEMOANIMS                             _actorProps
+-        zealot_prop                          zealot.nod                     DEMOANIMS                             _ProtossProps
+-        zergEgg_prop                         zergEgg.nod                    DEMOANIMS                             _ZergProps
+-        zergling_prop_67                     zergling.nod                   DEMOANIMS                             zergling_prop
+Protoss  AR_psiDampener                       AR_PsiDampener.nod             PSIDAMPENER                40         _Protoss
+Protoss  auraKahn                             AuraKhan.nod                                             100         darkTemplar
+Protoss  auraKhan_cut                         AuraKhan.nod                                             100         _ProtossCutscene
+Protoss  cloakGenerator                       cloakGenerator.nod             CLOAKGENERATOR             40         _Protoss
+Protoss  cloakGenerator_nolockdown            cloakGenerator.nod             CLOAKGENERATOR             40         cloakGenerator
+Protoss  crystalGuard                         crystalGuard.nod               PROTOSSCRYSTAL              7         _Protoss
+Protoss  darkArchon_cut                       darkArchon.nod                                           100         _ProtossCutscene
+Protoss  darkTemplar                          darkTemplar.nod                                          100         _Protoss
+Protoss  dragoon                              dragoon.nod                    PROTOSSDRAGOON            100     80  _Protoss
+Protoss  gateway_building                     gatewayWARP.nod                                          100         _protossBuildings
+Protoss  highTemplar                          HighTemplar.nod                PROTOSSHIGHTEMPLAR         45     40  _Protoss
+Protoss  Khandalor                            khandalor.nod                                            100         darkTemplar
+Protoss  nexus_building                       nexus.nod                                                100         _protossBuildings
+Protoss  observer                             observer.nod                   PROTOSSOBSERVER            40     40  _Protoss
+Protoss  photonCannon                         photonCannon.nod               PROTOSSCANNON             200    150  _Protoss
+Protoss  photonCannon_out                     photonCannon_out.nod           PROTOSSCANNON             200    150  photonCannon
+Protoss  photonCannon_out_311                 photonCannon_out.nod           PROTOSSCANNON             200    150  photonCannon_out
+Protoss  photonCannon_out_hib                 photonCannon_out.nod           PROTOSSCANNON             200    150  photonCannon_out
+Protoss  photonCannon_test                    photonCannon.nod               PROTOSSCANNON             200    150  photonCannon
+Protoss  photonCannon_yamato                  photonCannon.nod               PROTOSSCANNON             200    150  photonCannon
+Protoss  probe                                probe.nod                      PROTOSSPROBE               20     20  _Protoss
+Protoss  probe_hib                            probe.nod                      PROTOSSPROBE               20     20  probe
+Protoss  purifer                              purifier.nod                   PROTOSSPURIFIER           130     90  purifier
+Protoss  purifier                             purifier.nod                   PROTOSSPURIFIER           130     90  _Protoss
+Protoss  purifier_hib                         purifier.nod                   PROTOSSPURIFIER           130     90  purifier
+Protoss  pylon                                pylon.nod                      PROTOSSPYLON              200    150  _Protoss
+Protoss  pylon_hib                            pylon.nod                      PROTOSSPYLON              200    150  pylon
+Protoss  scout                                scout.nod                      PROTOSSSCOUT              150         _Protoss
+Protoss  shieldbattery_building               shieldbattery.nod              PROTOSSSHIELDBATTERY      100         _protossBuildings
+Protoss  shuttle                              shuttle.nod                    PROTOSSOBSERVER            80     60  _Protoss
+Protoss  Solara                               Solara.nod                                               100         darkTemplar
+Protoss  Solara_cut                           Solara.nod                                               100         _ProtossCutscene
+Protoss  Tanagazj                             Tanagazj.nod                   BOSSTANAGAZJ              600         darkTemplar
+Protoss  Zangakar                             Zangakar.nod                                             100         darkTemplar
+Protoss  zangakarHickson_cut                  ZangakarHickson.nod                                      100         _ProtossCutscene
+Protoss  zealot                               zealot.nod                     PROTOSSZEALOT             120     80  _Protoss
+Protoss  zealot_hib                           zealot.nod                     PROTOSSZEALOT             120     80  zealot
+Terran   1_3_1_pipe                           1_3_1_pipe.nod                                           100         _TerranCutscene
+Terran   1_3_1_zipEnd                         1_3_1_zipEnd.nod                                         100         _TerranCutscene
+Terran   2_2_2_bridge_door                    2_2_2_bridge_door                                        100         _TerranCutscene
+Terran   2_2_2_dome                           2_2_2_dome.nod                                           100         _TerranCutscene
+Terran   2_3_a_hicksonVulture                 2_3_a_hicksonVulture.nod                                 100         _TerranCutscene
+Terran   2_3_a_parkedVulture                  2_3_a_parkedVulture.nod                                  100         _TerranCutscene
+Terran   3_1_a_chair                          3_1_a_Chair.nod                                          100         _TerranCutscene
+Terran   antiAirgun                           antiAirgun.nod                                           100         _Terran
+Terran   Artemis                              artemis.nod                    BOSSARTEMIS               200         _Terran
+Terran   Artemis_cut                          artemis.nod                                              100         _TerranCutscene
+Terran   bunkerGun                            BunkerGun.nod                                            100         _Terran
+Terran   bunkerRifle                          DummyGun.nod                   TURRETSENTRY              100         _Terran
+Terran   Cam_antiZergHuman                    cameraTerran2.nod              CAMERA                     80         Camera2_test
+Terran   Camera                               CameraSmall.nod                                          100         _Terran
+Terran   Camera2                              cameraTerran2.nod              CAMERA                     80         Camera2_test
+Terran   Camera2_detect                       cameraTerran2.nod              CAMERA                     80         Camera2_test
+Terran   Camera2_nopan                        cameraTerran2.nod              CAMERA                     80         Camera2_test
+Terran   Camera2_test                         cameraTerran2.nod              CAMERA                     80         _Terran
+Terran   dropship_cut                         Dropship_cut.nod                                         100         _TerranCutscene
+Terran   dropship_hauler_cut                  Dropship_hauler_cut.nod                                    1         dropship_cut
+Terran   dropshipInterior_cut                 dropshipInterior_cut.nod                                 100         _TerranCutscene
+Terran   dropshipInterior_cut_131B            dropshipInterior_cut_131B.nod                            100         dropshipInterior_cut
+Terran   dropshipInterior_cut_222             dropshipInterior_cut_131B.nod                            100         dropshipInterior_cut
+Terran   dummyGun                             DummyGun.nod                                             100         _Terran
+Terran   E3only_doors                         E3only_doors.nod                                         100         E3only_lift
+Terran   E3only_lift                          E3only_lift.nod                                          100         _TerranCutscene
+Terran   firebat                              firebatTy.nod                  TERRANFIREBAT             130         _Terran
+Terran   firebat_elite                        firebat_elite.nod              TERRANFIREBAT             130         firebat
+Terran   firebat_elite_autohib                firebat_elite.nod              TERRANFIREBAT             130         firebat_elite
+Terran   firebat_elite_hib                    firebat_elite.nod              TERRANFIREBAT             130         firebat_elite
+Terran   firebat_hauler                       firebat_hauler.nod             TERRANFIREBAT             130         firebat
+Terran   firebatSidekick                      firebat.nod                    TERRANMARINESIDEKICK      130         firebat
+Terran   firebatSidekick_elite                firebat_elite.nod              TERRANMARINESIDEKICK      130         firebat
+Terran   firebatSidekick_hauler               firebat_hauler.nod             TERRANMARINESIDEKICK      130         firebat
+Terran   Firefly_player                       itemFirefly.nod                mine                       20         spiderMine_player
+Terran   flameTurret                          flameTurret_marine.nod         TERRANFLAMETURRET          95         flameTurret_marine
+Terran   flameTurret_marine                   flameTurret_marine.nod         TERRANFLAMETURRET          95         _Terran
+Terran   floatingMine                         spiderMine.nod                 proximitymine              20         _Terran
+Terran   floorGun                             floorGun.nod                   TURRET                     50         _Terran
+Terran   floorGun_NOLIFE                      floorGun.nod                   TURRET                     50         floorGun
+Terran   floorGun_zergKill                    floorGun.nod                   TURRET                     50         floorGun
+Terran   floorGunAlarm                        floorGun.nod                   TURRET                     50         floorGun
+Terran   friendlyTurret                       wallTurret.nod                 WALLTURRET                 50         wallTurret
+Terran   ghost_male                           Ghost_male.nod                 TERRANGHOST                85         _Terran
+Terran   ghost_male_close                     Ghost_male.nod                 TERRANGHOSTCLOSE           85         ghost_male
+Terran   ghost_male_hibstart                  Ghost_male.nod                 TERRANGHOST                85         ghost_male
+Terran   ghost_male_snipedrop                 Ghost_male.nod                 TERRANGHOST                85         ghost_male
+Terran   Goliath                              goliath_red.nod                TERRANGOLIATH             275         _Terran
+Terran   Goliath_222c                         goliath_boss.nod               TERRANGOLIATH             275         Goliath_rebel
+Terran   Goliath_232                          goliathBoss.nod                TERRANGOLIATHBOSS         275         Goliath
+Terran   goliath_232_cut                      goliath_boss.nod                                         100         goliath_cut
+Terran   goliath_cut                          goliath_boss.nod                                         100         _TerranCutscene
+Terran   Goliath_elite                        goliath_black.nod              TERRANGOLIATH             275         Goliath
+Terran   Goliath_elite_nomove                 goliath_black.nod              TERRANGOLIATH             275         Goliath_elite
+Terran   Goliath_hauler                       goliath_blue.nod               TERRANGOLIATH             275         Goliath
+Terran   Goliath_rebel                        goliath_boss.nod               TERRANGOLIATH             275         Goliath
+Terran   gunTurret_marine                     gunTurret_marine.nod           TERRANGAUSSTURRET          90         _Terran
+Terran   Hauler_Boss                          HaulerBoss.nod                 BOSSHAULER                100         _Terran
+Terran   hauler_cut                           hauler.nod                                               100         _TerranCutscene
+Terran   hickson_cut                          rebelLeader.nod                                          100         _TerranCutscene
+Terran   Infantry                             lightInfantry.nod              TERRANLIGHTINFANTRY        80         _Terran
+Terran   Infantry_hauler                      lightInf_hauler.nod            TERRANLIGHTINFANTRY        80         Infantry
+Terran   Infantry_hauler_BlindFireKneel       lightInf_hauler.nod            TERRANLIGHTINFANTRY        80         Infantry
+Terran   infantry_hauler_cut                  lightInf_hauler.nod                                      100         _TerranCutscene
+Terran   Infantry_hib                         lightInfantry.nod              TERRANLIGHTINFANTRY        80         Infantry
+Terran   Infantry_hib_hauler                  lightInf_hauler.nod            TERRANLIGHTINFANTRY        80         Infantry_hib
+Terran   infestedCommandCenter                infestedCommandCenter.nod                                100         _Terran
+Terran   Mantis_player                        itemSpiderMine.nod             mine                       20         spiderMine_player
+Terran   Marine                               marine1Tex.nod                 TERRANMARINE              120         _Terran
+Terran   Marine10Den                          marine10Den.nod                TERRANMARINE              120         Marine
+Terran   marine1_131b                         marine1_hauler.nod             TERRANMARINE              125         Marine1_hauler_hibstart
+Terran   Marine1_elite                        marine1_elite.nod              TERRANMARINE              130         Marine
+Terran   Marine1_hauler                       marine1_hauler.nod             TERRANMARINE              125         Marine
+Terran   marine1_hauler_cut                   marine1_hauler.nod                                       100         marine3_cut
+Terran   marine1_hauler_cut_131DRAG           marine1_hauler.nod                                       100         marine1_hauler_cut
+Terran   Marine1_hauler_hib                   marine1_hauler.nod             TERRANMARINE              125         Marine1_hauler
+Terran   Marine1_hauler_hibstart              marine1_hauler.nod             TERRANMARINE              125         Marine1_hauler
+Terran   Marine1_hauler_nofade                marine1_hauler.nod             TERRANMARINE              125         Marine1_hauler
+Terran   Marine1_hauler_sidekick              marine_hauler_mob.nod          TERRANMARINE              125         Marine1_hauler
+Terran   Marine1_rebel                        marine1_rebel.nod              TERRANMARINE              130         Marine
+Terran   Marine1Tex                           marine1Tex.nod                 TERRANMARINE              120         Marine
+Terran   Marine1Tex_BlindFireKneel            marine1Tex.nod                 TERRANMARINE              120         Marine
+Terran   Marine2_elite                        marine2_elite.nod              TERRANMARINE              130         Marine
+Terran   Marine2_elite_autohib                marine2_elite.nod              TERRANMARINE              130         Marine2_elite
+Terran   Marine2_elite_autohib_nospot         marine_elite_mob.nod           TERRANMARINE              130         Marine2_elite_autohib
+Terran   marine2_elite_cut                    marine2_elite.nod                                        100         marine3_cut
+Terran   Marine2_elite_hib                    marine2_elite.nod              TERRANMARINE              130         Marine2_elite
+Terran   Marine2_hauler                       marine2_hauler.nod             TERRANMARINE              125         Marine
+Terran   Marine2Joe                           marine2Joe.nod                 TERRANMARINE              120         Marine
+Terran   Marine2Joe_hib                       marine2Joe.nod                 TERRANMARINE              120         Marine2Joe
+Terran   Marine2Joe_hrtest                    marine2Joe.nod                 TERRANMARINE              120         Marine2Joe
+Terran   marine3_cut                          marine3Sacker.nod                                        100         _TerranCutscene
+Terran   Marine3Jethro                        marineBattlefield.nod          TERRANMARINE              120         Marine
+Terran   Marine3Jethro_hib                    marineBattlefield.nod          TERRANMARINE              120         Marine3Jethro
+Terran   Marine3Sacker                        marine3Sacker.nod              TERRANMARINE              120         Marine
+Terran   Marine4Chuggins                      marine4Chuggins.nod            TERRANMARINE              120         Marine
+Terran   Marine5Lister                        marine5Lister.nod              TERRANMARINE              120         Marine
+Terran   Marine6Dai                           marine6Dai.nod                 TERRANMARINE              120         Marine
+Terran   Marine_captain                       marineCaptain.nod              TERRANMARINE              120         Marine
+Terran   Marine_captain_elite                 marineCaptain_elite.nod        TERRANMARINE              120         Marine_captain
+Terran   Marine_captain_hauler                marineCaptain_hauler.nod       TERRANMARINE              120         Marine_captain
+Terran   Marine_captain_hauler_hib            marineCaptain_hauler.nod       TERRANMARINE              120         Marine_captain_hauler
+Terran   Marine_captain_rebel                 marineCaptain_rebel.nod        TERRANMARINE              120         Marine_captain
+Terran   Marine_Dead                          marine1Tex.nod                 NULL                      120         Marine
+Terran   Marine_Invisible                     marine1Tex.nod                 TERRANMARINE              100         _Terran
+Terran   MarineSidekick                       marineBattlefield.nod          TERRANMARINESIDEKICK      120         Marine
+Terran   MarineSidekick_hib                   marineBattlefield.nod          TERRANMARINESIDEKICK      120         MarineSidekick
+Terran   MarineSidekick_wounded               marineBattlefield.nod          TERRANMARINESIDEKICK      120         MarineSidekick
+Terran   mechanic                             mechanic.nod                   TERRANSCIENTIST            30         _Terran
+Terran   meleeTest                            marine1Tex.nod                 TERRANMARINE              120         Marine
+Terran   menu_bc                              menu_bc.nod                                              100         _TerranCutscene
+Terran   menu_dropship                        menu_dropship.nod                                        100         _TerranCutscene
+Terran   menu_ghostLogo                       ghostLogo.nod                                            100         _TerranCutscene
+Terran   miniScienceVessel                    MiniScienceVessel.nod          TERRANSCIENCEVESSEL       100         miniScienceVessel_track
+Terran   miniScienceVessel_hib                MiniScienceVessel.nod          TERRANSCIENCEVESSEL       100         miniScienceVessel_track
+Terran   miniScienceVessel_track              MiniScienceVessel.nod          TERRANSCIENCEVESSEL       100         _Terran
+Terran   MissileTurret                        MissileTurret_01.nod                                     200         _Terran
+Terran   MissileTurret_432                    MissileTurret_01.nod                                     200         MissileTurret
+Terran   MissileTurret_arclite                MissileTurret_01.nod                                     200         MissileTurret
+Terran   MissileTurret_spin                   MissileTurret_01.nod                                     200         MissileTurret
+Terran   Nova_Cinematics                      novaCinematics.nod                                       100         Nova_cut
+Terran   Nova_cut                             nova.nod                                                 100         _TerranCutscene
+Terran   Nova_mask_cut                        novaFaceCovered.nod                                      100         Nova_cut
+Terran   novaVulture_cut                      novaVulture.nod                                          100         _TerranCutscene
+Terran   psiDampener                          psiDampner.nod                 PSIDAMPENER                40         _Terran
+Terran   psiDampener_nolockdown               psiDampner.nod                 PSIDAMPENER                40         psiDampener
+Terran   psiDampener_useregion                psiDampner.nod                 PSIDAMPENER                40         psiDampener
+Terran   scientist                            scientist.nod                  TERRANSCIENTIST            30         _Terran
+Terran   scientist_nopause                    scientist.nod                  TERRANSCIENTIST            30         scientist
+Terran   SCV                                  scvCombo.nod                   TERRANSCV                  85         _Terran
+Terran   SCV121                               scvCombo121.nod                TERRANSCV121               60         _Terran
+Terran   SCV_hauler                           scvCombo_blue.nod              TERRANSCV                  85         SCV
+Terran   SCV_psi                              scvComboPSI.nod                TERRANSCV                  85         SCV
+Terran   scvCombo_cut                         scvCombo.NOD                                             100         _TerranCutscene
+Terran   scvDriver                            scvDriver.nod                  TERRANSCIENTIST            30         _Terran
+Terran   scvDriver_autohib                    scvDriver.nod                  TERRANSCIENTIST            30         scvDriver
+Terran   scvDriver_cut                        scvDriver.nod                                            100         _TerranCutscene
+Terran   scvDriver_dead                       scvDriver.nod                  NULL                       30         scvDriver
+Terran   scvDriver_nopause                    scvDriver.nod                  TERRANSCIENTIST            30         scvDriver
+Terran   searchlight                          cameraTerran2.nod              SEARCHLIGHT                80         Camera2_test
+Terran   siegeTank                            siegeTank.nod                  TERRANSIEGETANK           350         siegeTank_baseClass
+Terran   siegeTank_121repair                  siegeTank.nod                  TERRANSIEGETANK           200         siegeTank_baseClass
+Terran   siegeTank_baseClass                  siegeTank.nod                  TERRANSIEGETANK           350         _Terran
+Terran   siegeTank_cut                        siegeTank.nod                                            100         _TerranCutscene
+Terran   siegeTank_elite                      siegeTank_black.nod            TERRANSIEGETANK           350         siegeTank_baseClass
+Terran   siegeTank_hauler                     siegeTank_blue.nod             TERRANSIEGETANK           350         siegeTank_baseClass
+Terran   siegeTank_stationary                 siegeTank_black.nod            TERRANSIEGETANK           350         siegeTank_baseClass
+Terran   sniper_boss                          sniper.nod                     BOSSSNIPER                100         _Terran
+Terran   spiderMine                           itemSpiderMine.nod             mine                       50         _Terran
+Terran   spiderMine_player                    itemSpiderMine.nod             mine                       20         spiderMine
+Terran   TerranVulture                        vulture_terran.nod             TERRANVULTURE             150         _Terran
+Terran   testEnemy                            marine1Tex.nod                 TERRANMARINE              120         Marine
+Terran   Trooper                              trooper.nod                    TERRANLIGHTINFANTRY        85         _Terran
+Terran   trooper_cut                          trooper.nod                                              100         _TerranCutscene
+Terran   TunnelTrain                          TunnelTrain.nod                                          100         _Terran
+Terran   TunnelTrain_232                      TunnelTrain.nod                                          100         TunnelTrain
+Terran   Turret                               floorGun.nod                   TURRET                     50         floorGun
+Terran   turretMine                           spiderMine.nod                 turretmine                 20         _Terran
+Terran   turretScan                           floorGun.nod                   TURRETSCAN                 50         floorGun
+Terran   Vulcan                               vulcan.nod                     BOSSBRAIN                 200         _Terran
+Terran   Vulcan_cut                           vulcan.nod                                               200         _TerranCutscene
+Terran   vultureSmash_cut                     vultureSmash_cut.nod                                     100         _TerranCutscene
+Terran   wallTurret                           wallTurret.nod                 WALLTURRET                 50         _Terran
+Terran   wallTurretAlarm                      wallTurret.nod                 WALLTURRET                 50         wallTurret
+Terran   wraith                               wraith.nod                     PROTOSSSCOUT              150         _Terran
+Terran   wraith_cut                           wraith_cut.nod                                           100         _TerranCutscene
+Terran   wraith_cut_break                     wraith_cut.nod                                           100         wraith_cut
+Zerg     CH_19_tentacle                       CH_19_Tentacle.nod             COLLIDEDETECTOR            25         tentacle
+Zerg     hydralisk                            hydralisk.nod                  ZERGHYDRALISK             120         _Zerg
+Zerg     hydralisk_cut                        hydralisk.nod                                            100         _ZergCutscene
+Zerg     hydralisk_cut_131DRAG                hydralisk.nod                                            100         hydralisk_cut
+Zerg     hydralisk_hib                        hydralisk.nod                  ZERGHYDRALISK             120         hydralisk
+Zerg     hydralisk_nosearch                   hydralisk.nod                  ZERGHYDRALISK             120         hydralisk
+Zerg     hydralisk_test                       hydralisk.nod                  ZERGHYDRALISK             120         hydralisk
+Zerg     hydraliskRUSHING                     hydraliskRUSH.nod              ZERGLINGRUSHING           120         hydralisk
+Zerg     hydraliskRUSHING_nohibstart          hydraliskRUSH.nod              ZERGLINGRUSHING           120         hydraliskRUSHING
+Zerg     infestedSCVdriver                    infestedSCV.nod                ZERGINFESTEDTERRANNE      150         _Zerg
+Zerg     infestedSCVdriver_onfloor            infestedSCV.nod                ZERGINFESTEDTERRANNE      150         infestedSCVdriver
+Zerg     infestedTerran                       infestedTerran2.nod            ZERGINFESTEDTERRANGU      120         _Zerg
+Zerg     infestedTerran_nogun                 infestedTerran.nod             ZERGINFESTEDTERRANEX      120         _Zerg
+Zerg     infestedTerran_onfloor               infestedTerran2.nod            ZERGINFESTEDTERRANGU      120         infestedTerran
+Zerg     larva                                zergLarva.nod                  ZERGLARVA2                 10         _Zerg
+Zerg     lurker_boss                          lurker_boss.nod                BOSSLURKER                100         _Zerg
+Zerg     lurker_boss_arclite                  lurker_boss.nod                ZERGLURKERTURRET          100         lurker_boss
+Zerg     lurker_cut                           lurker_boss.nod                                          100         _ZergCutscene
+Zerg     mutalisk                             mutalisk.nod                   ZERGMUTALISK              120         _Zerg
+Zerg     nydusCanal                           1_2_1_nydusCanal.nod                                     100         _Zerg
+Zerg     overlord                             overlord.nod                   ZERGOVERLORD              200         _Zerg
+Zerg     overlord_223                         overlord.nod                   ZERGOVERLORD              200         overlord
+Zerg     overlord_nukeable                    overlord.nod                   ZERGOVERLORD              200         overlord
+Zerg     scourge                              scourge.nod                    ZERGSCOURGE                25         _Zerg
+Zerg     sporeColony                          sporeColony.nod                ZERGSPORECOLONYBIG        400         _Zerg
+Zerg     sporeColony_arclite                  sporeColony.nod                ZERGSPORECOLONYBIG        400         sporeColony
+Zerg     sporeColony_mini                     SporeColony_mini.nod           ZERGSPORECOLONY            20         _Zerg
+Zerg     sporeColony_yamato                   sporeColony.nod                ZERGSPORECOLONYBIG        400         sporeColony
+Zerg     sunkenColony                         sunkenColony.nod               ZERGSUNKENCOLONY          300         _Zerg
+Zerg     sunkenColony_antiterran              sunkenColony.nod               ZERGSUNKENCOLONY          300         sunkenColony_arclite
+Zerg     sunkenColony_arclite                 sunkenColony.nod               ZERGSUNKENCOLONY          300         sunkenColony
+Zerg     sunkenColony_yamato                  sunkenColony.nod               ZERGSUNKENCOLONY          300         sunkenColony
+Zerg     tentacle                             CH_19_Tentacle.nod             COLLIDEDETECTOR            25         _Zerg
+Zerg     testEnemy_old                        szlachta.nod                                             100         _Zerg
+Zerg     TGS_door_cut                         TGS_door_cut.nod                                         100         _ZergCutscene
+Zerg     ultralisk                            ultralisk.nod                  BOSSULTRALISK             400         _Zerg
+Zerg     ultralisk_cut                        Ultralisk.nod                                            100         _ZergCutscene
+Zerg     zerg_critter                         zergling.nod                   ZERGTANKCRITTER           100         _Zerg
+Zerg     zergEgg                              zergEgg.nod                    ZERGEGG                    60         _Zerg
+Zerg     zergling                             zerglingNORMAL.nod                                        30         _Zerg
+Zerg     zergling_burrowed                    zergling.nod                   DEMOANIMS                 100         zergling_test
+Zerg     zergling_cut                         zerglingNORMAL.nod                                       100         _ZergCutscene
+Zerg     zergling_test                        Zergling_prop_100.nod          DEMOANIMS                 100         _Zerg
+Zerg     zerglingNORMAL                       zerglingNORMAL.nod             zergling                   30         zergling
+Zerg     zerglingNORMAL_autohib               zerglingNORMAL.nod             zergling                   30         zerglingNORMAL
+Zerg     zerglingNORMAL_comsat                zerglingNORMAL.nod             zergling                   30         zerglingNORMAL
+Zerg     zerglingNORMAL_hib                   zerglingNORMAL.nod             zergling                   30         zerglingNORMAL
+Zerg     zerglingNORMAL_nosearch              zerglingNORMAL.nod             zergling                   30         zerglingNORMAL
+Zerg     zerglingRushing                      zerglingRUSHING.nod            ZERGLINGRUSHING            30         zergling
+Zerg     zerglingRushing_BIG                  zerglingRUSHING.nod            ZERGLINGRUSHING            30         zerglingRushing
+Zerg     zerglingRushing_LIL                  zerglingRUSHING.nod            ZERGLINGRUSHING            30         zerglingRushing
+Zerg     zergPustule                          zergPustule.nod                ZERGPUSTULE                40         _Zerg

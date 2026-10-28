@@ -1,0 +1,25 @@
+# the prototype itself (your own copy; never committed)
+/game/
+# build output, test captures, reverse-engineering dumps, local tools
+/build/
+/test/
+/re/
+/tools/
+# the compiled Enemy Zoo and a local SDK copy
+/levels/zoo/out/
+/levels/zoo/sdk/
+# release staging: only the patch's text files are tracked; the zips go to GitHub Releases, and the patch's game
+# files (Strings, Misc, Sounds, UI images) stay local
+/release/*
+!/release/GhostPC_Patch/
+/release/GhostPC_Patch/*
+!/release/GhostPC_Patch/GhostPC_README.txt
+!/release/GhostPC_Patch/mapsrc/
+/release/GhostPC_Patch/mapsrc/*
+!/release/GhostPC_Patch/mapsrc/README.txt
+!/release/GhostPC_Patch/mapsrc/compile_zoo.bat
+# logs, dumps, caches
+*.log
+*.dmp
+__pycache__/
+*.pyc
