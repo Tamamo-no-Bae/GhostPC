@@ -1,0 +1,144 @@
+// ghostpc.nsa -- materials GhostPC adds (opened by GhostPC with cShader::OpenArchive at startup)
+//
+// Nova in Dark Templar armour (nova_DT.nod / nova_DT43.nod): its seven materials are defined nowhere in the build.
+// Textures by where each material's UVs fall: Nova_DT_New holds the suit (armour plates, the white bodysuit, the
+// lights, the hair and the rifle); NovaDarkTemplar the Dark Templar helmet, straps, cloth and claws. Shaders by the
+// build's naming (_gloss glossenvmap, _light ghostsuit like Nova's bodysuit NovaReduxFinal_Lights, _glow glow,
+// _full fullbright) and the values of Nova's NovaReduxFinal materials.
+
+Nova_DT_Armor_gloss
+{
+; the armour plates
+	shader glossenvmap
+	meshType 7
+	texture Nova_DT_New
+	envmap GE_env_room_blu.dds
+	sightForceMedium
+	sound creep
+}
+
+Nova_DT_Armor_light
+{
+; the white bodysuit
+	shader	ghostsuit
+	meshType 7
+	texture	Nova_DT_New
+	envmap	bandtest
+	sightForceHot
+	sound creep
+}
+
+Nova_DT_New
+{
+; the hair
+	shader normal
+	meshType 7
+	texture Nova_DT_New
+	sightForceHot
+	sound creep
+}
+
+Nova_DT_New_full
+{
+; the suit lights
+	shader fullbright
+	meshType 7
+	texture Nova_DT_New
+	sightForceHot
+	sound creep
+}
+
+Nova_DT_gloss
+{
+; Dark Templar straps, cloth pieces and claws
+	shader glossenvmap
+	meshType 7
+	texture NovaDarkTemplar
+	envmap GE_env_room_blu.dds
+	sightForceMedium
+	sound creep
+}
+
+nova_DT_glow
+{
+; the Dark Templar helmet
+	shader	glow
+	meshType 7
+	texture	NovaDarkTemplar
+	sightForceHot
+	sound creep
+}
+
+ghostRifle_unarmed
+{
+; her rifle (painted into Nova_DT_New)
+	shader glossenvmap
+	meshType 4
+	texture Nova_DT_New
+	envmap GE_env_room_blu.dds
+	sightforcecool
+	sound metal
+}
+
+// Nova reskins (scripts\make_skin.py: nova.nod copies with renamed materials, the painted textures with
+// NovaReduxFinal's alpha mask). Same shaders and values as Nova's own materials.
+
+// Ice (nova_ice.nod, template Nova_ice: player 2)
+NovaIce_Lights
+{
+; the bodysuit
+	shader	ghostsuit
+	meshType 7
+	texture	NovaIce
+	envmap	bandtest
+	sightForceHot
+}
+
+NovaIce_gloss
+{
+; the armour
+	shader glossenvmap
+	meshType 7
+	texture NovaIce
+	envmap GE_env_room_blu.dds
+	sightForceMedium
+	sound creep
+}
+
+NovaIce_glo
+{
+; the suit lights
+	shader	glow
+	meshType 7
+	texture	NovaIce
+	sightForceHot
+	sound creep
+}
+
+NovaIce_unarmed
+{
+; her right hand
+	shader glossenvmap
+	meshType 6
+	texture NovaIce
+	envmap GE_env_room_blu.dds
+	sightForceMedium
+	sound creep
+}
+
+NovaIceFace
+{
+	shader normal
+	meshType 7
+	texture NovaIceFace
+	sightForceHot
+	sound creep
+}
+
+NovaIceFace_hair
+{
+	shader masked
+	meshType 7
+	texture NovaIceFace
+	sightForceHot
+}
