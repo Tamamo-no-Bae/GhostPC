@@ -19,10 +19,21 @@ Files in this patch:
   GhostPC.exe            the loader / port (new)
   GhostPC_README.txt     this file (new)
   Strings\game.nls       English text table; the build reads it from Strings\. A copy of
-                         Misc\game.nls plus the two lines for the Enemy Zoo test map (new)
+                         Misc\game.nls plus the lines for the Enemy Zoo test map and the Protoss
+                         Arena (new)
   Misc\ghostsp.nsc       single-player mission list with the commented-out mission
                          1_3_REFINERY / 1_3_1a_Hive_StationOuter enabled and the Enemy Zoo test
                          map added at the end of the active missions (REPLACES the original)
+  Misc\ghostmpcoop.nsc   the co-op mission list (missing from the build; made from ghostsp.nsc,
+                         its own save slot) (new)
+  Misc\ghostmpcomp.nsc   the competitive mission list: the Protoss Arena (new)
+  Levels\8_1_1a_Protoss_Arena.nil / .nsd / .npd / .nlfx / .gpc
+                         the Protoss Arena, the competitive map, and its level script (starts and
+                         respawn points) (new level, see MULTIPLAYER)
+  UI\Materials\811a_MenuImage.dds, 811a_MenuImageL.dds
+                         its mission-select pictures (new)
+  3D\Models\nova_ice.nod, 3D\Materials\NovaIce.dds, NovaIceFace.dds, Materials\ghostpc.nsa
+                         Echo, player 2: Nova's model in the Ice skin (new)
   Levels\9_1_1a_Enemy_Zoo.nil / .nsd / .npd / .nlfx
                          the Enemy Zoo test map (new level, see below)
   Levels\9_1_1a_Enemy_Zoo.gpc
@@ -34,8 +45,9 @@ Files in this patch:
   3D\Motions\zoo_goliath_222c.nms
                          the Enemy Zoo's cut Goliath boss motion set (new)
   Sounds\custom\         added unit sounds, StarCraft's own (new, see CUSTOM SOUNDS)
-  mapsrc\                the Enemy Zoo's source and build scripts (not needed to play, see its
-                         README.txt; built with the OpenNOD SDK, github.com/aknavj/nodsdk-scghost)
+  mapsrc\                the Enemy Zoo's source and build scripts, the Protoss Arena's in
+                         mapsrc\arena (not needed to play, see their README.txt; built with the
+                         OpenNOD SDK, github.com/aknavj/nodsdk-scghost)
 
 Requirements: Windows 10 or 11 (uses the system's d3d9, XAudio2.9, XInput 9.1.0 and
 d3dcompiler_47), any Direct3D 9 capable GPU.
@@ -53,6 +65,7 @@ or run "GhostPC.exe -setup", to get it back). Options:
   - Windowed / Fullscreen / Borderless fullscreen, VSync
   - Keyboard + mouse or Controller
   - Mouse sensitivity
+  - Competitive time limit (3 to 30 minutes, 10 by default)
 
 
 CONTROLS (keyboard + mouse, defaults)
@@ -126,12 +139,50 @@ walls; the other units only react when they see or are hit by her. The enemy Gho
 the triggers that wake the bosses (the work of the missing mission scripts).
 
 
+MULTIPLAYER
+-----------
+The prototype has a local two-player mode, split screen left and right, that its menus never
+reached. GhostPC restores it: main menu -> Multiplayer. Player 1 plays on keyboard + mouse (or the
+first controller), player 2, Echo (Nova in her Ice skin), on a controller. Each player picks a
+profile (the second can't be the first's).
+
+Cooperative: the campaign's missions for two. Each half has its own HUD, aiming, reticle and
+calldowns (both players can call them down); the briefing, objectives and cutscene dialogue are
+full screen. Either player can set off a mission's triggers, alone or together, and script moves
+and cutscenes take Echo along (Nova is the one in the cutscenes). Either player's death ends the
+mission ("Echo fell to her death."). Co-op has its own progress (its own save slot); a profile
+named NOVA unlocks every mission.
+
+Competitive: 2 Players (4 Players is for a later patch), Nova against Echo in the Protoss Arena, a
+symmetric map with four pillars, side rooms, corridors and plenty of pickups. A dead player
+revives on a button press at a random respawn point, away from her opponent. Kills count for the
+shooter (grenades included; your own death doesn't count). The match timer
+(top of the screen) runs for the time limit set in the settings window, pausing in the pause menu.
+Hold Tab or Back (either controller, or Backspace) for the scoreboard. At the end the victory
+screen names the winner (the profile names) for a minute, Space or A skips it, and the game
+returns to the title screen. Start opens the pause menu (Quit) as in single player.
+
+
 CUSTOM SOUNDS
 -------------
 Some units' sound banks are missing their attack sounds in this build. GhostPC plays WAV files
 from Sounds\custom\<sound bank>\<cue>.wav in place of a bank cue (or where it is missing), with
 ~2, ~3 ... for random variants. Included: the Sunken Colony and the Lurker boss (StarCraft's
 own sounds).
+
+
+CHANGES (2026-10-29)
+--------------------
+- Multiplayer restored (see MULTIPLAYER): main menu Singleplayer / Multiplayer / Options.
+  - Co-op: split-screen rendering and HUDs, player 2 (Echo) on her own controller with player 1
+    on keyboard + mouse, starts beside player 1 in every level, per-player aiming, reticle and
+    calldowns, triggers for either
+    player, deaths end the mission, co-op profile menus with P1 / P2 titles and Delete, a
+    scrolling mission list.
+  - Competitive: the players menu, the Protoss Arena, random respawns, kills, the match timer
+    and its option, the scoreboard, the victory screen.
+- Typing a profile name: Backspace deletes, Shift for capitals, Esc goes back.
+- Aries the sniper boss: 80 damage a shot (was 25).
 
 
 CHANGES (2026-10-28)

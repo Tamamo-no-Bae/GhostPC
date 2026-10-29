@@ -38,8 +38,22 @@ static float Shape(float v) {
     if (t > 1.f) t = 1.f;
     return v < 0 ? -t : t;
 }
-static float MouseTerm(float counts, float rate) {
-    if (!MouseLookActive() || counts == 0.f) return 0.f;
+// The mouse turns player 1's camera only: in co-op the right-hand player plays on a controller (cControl +0x180 the
+// player, +0x520 its cPlayerInfo; pLeftLocalPlayer = the map's gameMotion_apNames+0x728)
+static uint32_t LocalPlayers() {
+    static uint32_t names = SymAddr("?gameMotion_apNames@@3PAPADA");
+    return names;
+}
+static bool PlayerOne(void *ctl) {
+    uint32_t names = LocalPlayers();
+    if (!names || !*(void **)(names + 0x72c)) return true;
+    __try {
+        uint8_t *player = *(uint8_t **)((uint8_t *)ctl + 0x180);
+        return player && *(void **)(player + 0x520) == *(void **)(names + 0x728);
+    } __except (EXCEPTION_EXECUTE_HANDLER) { return true; }
+}
+static float MouseTerm(void *ctl, float counts, float rate) {
+    if (!MouseLookActive() || counts == 0.f || !PlayerOne(ctl)) return 0.f;
     float dt = FrameTime();
     if (dt <= 0.f) return 0.f;
     float deg = counts * kDegPerCount * g_settings.mouseSensitivity / 100.f;
@@ -48,14 +62,14 @@ static float MouseTerm(float counts, float rate) {
 static float __fastcall GetCameraYaw(void *ctl, void *) {
     uint8_t *pad = CurrentPad();
     float v = -(pad ? *(float *)(pad + 0x5c) : 0.f);
-    v = Shape(v) - MouseTerm(g_frameLookDX, kYawRate);   // mouse right = turn right
+    v = Shape(v) - MouseTerm(ctl, g_frameLookDX, kYawRate);   // mouse right = turn right
     if (Inverted(ctl, 4)) v = -v;
     return v;
 }
 static float __fastcall GetCameraPitch(void *ctl, void *) {
     uint8_t *pad = CurrentPad();
     float v = -(pad ? *(float *)(pad + 0x60) : 0.f);
-    v = Shape(v) - MouseTerm(g_frameLookDY, kPitchRate);  // mouse up = look up (the game's invert option applies)
+    v = Shape(v) - MouseTerm(ctl, g_frameLookDY, kPitchRate);  // mouse up = look up (the game's invert option applies)
     if (Inverted(ctl, 2)) v = -v;
     return v;
 }
@@ -72,7 +86,7 @@ static void *GameCamera(void *ctl) {
 // Mouse turn in degrees for this frame (stick-equivalent signs: mouse right = stick right, mouse up = stick down,
 // as in GetCameraYaw/Pitch above), then the camera angles.
 static void MouseTurnCamera(void *ctl, float scale, float pitchMin, float pitchMax) {
-    if (!MouseLookActive() || (g_frameLookDX == 0.f && g_frameLookDY == 0.f)) return;
+    if (!MouseLookActive() || (g_frameLookDX == 0.f && g_frameLookDY == 0.f) || !PlayerOne(ctl)) return;
     static auto norm = (AngleFn)SymAddr("?mathTrig_NormalizeAngle@@YAMM@Z");
     static auto acute = (AngleFn)SymAddr("?mathTrig_NormalizeAngleAcute@@YAMM@Z");
     float k = kDegPerCount * g_settings.mouseSensitivity / 100.f * scale;

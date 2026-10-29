@@ -181,6 +181,23 @@ static void SetMouseCapture(bool on) {
     }
 }
 
+// Typing names (the shell's on-screen keyboard, cShellKeyboard): while shell.cpp reports text entry, typed characters
+// (WM_CHAR: case and Shift as Windows gives them, Backspace 8, Enter 13) are queued for it, and the keyboard's
+// controller bindings are off (Space, WASD, Enter would also press and move on the on-screen keys).
+static volatile LONG g_textEntry;
+static volatile LONG g_charHead, g_charTail;   // ring: the window thread writes the head, the game thread reads
+static char g_chars[64];
+void SetTextEntry(bool on) {
+    if (!on && g_textEntry) g_charTail = g_charHead;   // drop what was not read
+    g_textEntry = on;
+}
+int PopTypedChar() {
+    if (g_charTail == g_charHead) return -1;
+    int c = (unsigned char)g_chars[g_charTail & 63];
+    InterlockedIncrement(&g_charTail);
+    return c;
+}
+
 // called from the game window's WndProc; returns true when the message was handled
 bool InputWndProc(HWND h, UINT m, WPARAM w, LPARAM l) {
     if (!g_rawRegistered) {
@@ -229,6 +246,13 @@ bool InputWndProc(HWND h, UINT m, WPARAM w, LPARAM l) {
     case WM_MBUTTONUP: if (g_mbtn[2]) MouseButton(2, false, "msg"); break;
     case WM_XBUTTONDOWN: { int i = HIWORD(w) == XBUTTON1 ? 3 : 4; if (!g_mbtn[i]) MouseButton(i, true, "msg"); break; }
     case WM_XBUTTONUP: { int i = HIWORD(w) == XBUTTON1 ? 3 : 4; if (g_mbtn[i]) MouseButton(i, false, "msg"); break; }
+    case WM_CHAR:
+        if (g_textEntry && w != 27 && g_charHead - g_charTail < 64) {
+            g_chars[g_charHead & 63] = (char)w;
+            InterlockedIncrement(&g_charHead);
+            return true;
+        }
+        break;
     case WM_KEYDOWN:
         if (w == VK_ESCAPE && !(l & (1 << 30))) { extern volatile LONG g_escPressed; InterlockedExchange(&g_escPressed, 1); return true; }
         if (w == VK_F10) { g_captureMouse = !g_captureMouse; SetMouseCapture(g_captureMouse && Focused()); return true; }
@@ -249,6 +273,7 @@ bool InputWndProc(HWND h, UINT m, WPARAM w, LPARAM l) {
 // control for 8 frames starting at that frame.
 extern UINT g_frame;
 struct ScriptEv { UINT frame; int ctl; };
+static bool g_scriptP2;   // the script drives player 2 too: port 1 is reported even without a second pad
 static std::vector<ScriptEv> g_script;
 static void LoadScript() {
     static bool done;
@@ -263,9 +288,13 @@ static void LoadScript() {
         std::string it = s.substr(p, c == std::string::npos ? std::string::npos : c - p);
         size_t colon = it.find(':');
         if (colon != std::string::npos && it.substr(colon + 1) == "Esc") g_script.push_back({(UINT)atoi(it.c_str()), -1});
-        else if (colon != std::string::npos)
+        else if (colon != std::string::npos) {   // "P2 <control>": player 2's pad (port 1)
+            std::string name = it.substr(colon + 1);
+            int base = name.compare(0, 3, "P2 ") ? 0 : C_COUNT;
+            if (base) name = name.substr(3), g_scriptP2 = true;
             for (int i = 0; i < C_COUNT; i++)
-                if (it.substr(colon + 1) == kCtlNames[i]) g_script.push_back({(UINT)atoi(it.c_str()), i});
+                if (name == kCtlNames[i]) g_script.push_back({(UINT)atoi(it.c_str()), base + i});
+        }
         if (c == std::string::npos) break;
         p = c + 1;
     }
@@ -273,6 +302,8 @@ static void LoadScript() {
 // a short synthetic press of the Start button (Esc in missions acts like Enter/Start)
 void PressStart() { g_script.push_back({g_frame + 1, C_START}); }
 void PressBack() { g_script.push_back({g_frame + 1, C_B}); }   // B = "Back" in the front-end menus
+void PressA() { g_script.push_back({g_frame + 1, C_A}); }
+void PressDown() { g_script.push_back({g_frame + 1, C_DDOWN}); }
 // scripted Esc presses (ctl -1) go through the same path as the key
 void ScriptEsc() {
     extern volatile LONG g_escPressed;
@@ -307,9 +338,31 @@ static SHORT Axis(float pos, float neg) {
 static uint32_t g_gamepadTable;
 static DWORD g_reported;   // ports reported as inserted
 
+// Ports: port 0 is player 1 (keyboard/mouse and XInput pad 0), port 1 player 2 (co-op's right-hand player, the
+// cPlayerInfo pad +0x10) on its own XInput pad: pad 1 when connected, else pad 0 when player 1 plays on keyboard/mouse
+// (input "kbm") -- port 0 then leaves pad 0 to player 2 while a second player is in the game (pRightLocalPlayer).
+static bool PadConnected(DWORD i) {
+    static DWORD last[2], seen[2];
+    DWORD now = GetTickCount();
+    if (now - last[i] > 1000 || !last[i]) {   // a missing pad is slow to poll: once a second
+        XINPUT_STATE x;
+        seen[i] = XInputGetState(i, &x) == ERROR_SUCCESS;
+        last[i] = now ? now : 1;
+    }
+    return seen[i] != 0;
+}
+static int Player2Pad() {
+    if (PadConnected(1)) return 1;
+    return g_settings.input == IN_KBM && PadConnected(0) ? 0 : -1;
+}
+static bool TwoPlayers() {   // pRightLocalPlayer (0x82852C in the Xbox image: the map's gameMotion_apNames+0x72C)
+    static uint32_t names = SymAddr("?gameMotion_apNames@@3PAPADA");
+    return names && *(void **)(names + 0x72c) != nullptr;
+}
 static DWORD PortsFor(void *type) {
     if (!g_gamepadTable) g_gamepadTable = SymAddr("_XDEVICE_TYPE_GAMEPAD_TABLE");
-    if ((uint32_t)type == g_gamepadTable) return 1;   // one pad on port 0 (keyboard/mouse and XInput pad 0)
+    LoadScript();
+    if ((uint32_t)type == g_gamepadTable) return Player2Pad() >= 0 || g_scriptP2 ? 3 : 1;
     return 0;
 }
 XSTD(void, XInitDevices, 8, (DWORD, void *)) { LoadBindings(); }
@@ -330,32 +383,48 @@ XSTD(HANDLE, XInputOpen, 16, (void *type, DWORD port, DWORD slot, void *params))
 XSTD(void, XInputClose, 4, (HANDLE)) {}
 XSTD(DWORD, XInputSetState, 8, (HANDLE h, void *fb)) { return 0; }
 
+static void ReadPad(DWORD i, XB_GAMEPAD &g) {
+    XINPUT_STATE x;
+    if (XInputGetState(i, &x) == ERROR_SUCCESS) {
+        auto &p = x.Gamepad;
+        if (p.wButtons & XINPUT_GAMEPAD_DPAD_UP) g.wButtons |= XB_DPAD_UP;
+        if (p.wButtons & XINPUT_GAMEPAD_DPAD_DOWN) g.wButtons |= XB_DPAD_DOWN;
+        if (p.wButtons & XINPUT_GAMEPAD_DPAD_LEFT) g.wButtons |= XB_DPAD_LEFT;
+        if (p.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT) g.wButtons |= XB_DPAD_RIGHT;
+        if (p.wButtons & XINPUT_GAMEPAD_START) g.wButtons |= XB_START;
+        if (p.wButtons & XINPUT_GAMEPAD_BACK) g.wButtons |= XB_BACK;
+        if (p.wButtons & XINPUT_GAMEPAD_LEFT_THUMB) g.wButtons |= XB_LTHUMB;
+        if (p.wButtons & XINPUT_GAMEPAD_RIGHT_THUMB) g.wButtons |= XB_RTHUMB;
+        g.bAnalogButtons[AB_A] = (p.wButtons & XINPUT_GAMEPAD_A) ? 255 : 0;
+        g.bAnalogButtons[AB_B] = (p.wButtons & XINPUT_GAMEPAD_B) ? 255 : 0;
+        g.bAnalogButtons[AB_X] = (p.wButtons & XINPUT_GAMEPAD_X) ? 255 : 0;
+        g.bAnalogButtons[AB_Y] = (p.wButtons & XINPUT_GAMEPAD_Y) ? 255 : 0;
+        g.bAnalogButtons[AB_BLACK] = (p.wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER) ? 255 : 0;
+        g.bAnalogButtons[AB_WHITE] = (p.wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER) ? 255 : 0;
+        g.bAnalogButtons[AB_LT] = p.bLeftTrigger;
+        g.bAnalogButtons[AB_RT] = p.bRightTrigger;
+        g.sThumbLX = p.sThumbLX; g.sThumbLY = p.sThumbLY;
+        g.sThumbRX = p.sThumbRX; g.sThumbRY = p.sThumbRY;
+    }
+}
+bool CompetitiveMatch();   // competitive.cpp
+static DWORD g_backAt;   // when Back was last held (either port) in a competitive match
 XSTD(DWORD, XInputGetState, 8, (HANDLE h, XB_INPUT_STATE *st)) {
     static DWORD packet;
     XB_GAMEPAD g = {};
-    if ((uintptr_t)h == 1) {
-        XINPUT_STATE x;
-        if (XInputGetState(0, &x) == ERROR_SUCCESS) {
-            auto &p = x.Gamepad;
-            if (p.wButtons & XINPUT_GAMEPAD_DPAD_UP) g.wButtons |= XB_DPAD_UP;
-            if (p.wButtons & XINPUT_GAMEPAD_DPAD_DOWN) g.wButtons |= XB_DPAD_DOWN;
-            if (p.wButtons & XINPUT_GAMEPAD_DPAD_LEFT) g.wButtons |= XB_DPAD_LEFT;
-            if (p.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT) g.wButtons |= XB_DPAD_RIGHT;
-            if (p.wButtons & XINPUT_GAMEPAD_START) g.wButtons |= XB_START;
-            if (p.wButtons & XINPUT_GAMEPAD_BACK) g.wButtons |= XB_BACK;
-            if (p.wButtons & XINPUT_GAMEPAD_LEFT_THUMB) g.wButtons |= XB_LTHUMB;
-            if (p.wButtons & XINPUT_GAMEPAD_RIGHT_THUMB) g.wButtons |= XB_RTHUMB;
-            g.bAnalogButtons[AB_A] = (p.wButtons & XINPUT_GAMEPAD_A) ? 255 : 0;
-            g.bAnalogButtons[AB_B] = (p.wButtons & XINPUT_GAMEPAD_B) ? 255 : 0;
-            g.bAnalogButtons[AB_X] = (p.wButtons & XINPUT_GAMEPAD_X) ? 255 : 0;
-            g.bAnalogButtons[AB_Y] = (p.wButtons & XINPUT_GAMEPAD_Y) ? 255 : 0;
-            g.bAnalogButtons[AB_BLACK] = (p.wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER) ? 255 : 0;
-            g.bAnalogButtons[AB_WHITE] = (p.wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER) ? 255 : 0;
-            g.bAnalogButtons[AB_LT] = p.bLeftTrigger;
-            g.bAnalogButtons[AB_RT] = p.bRightTrigger;
-            g.sThumbLX = p.sThumbLX; g.sThumbLY = p.sThumbLY;
-            g.sThumbRX = p.sThumbRX; g.sThumbRY = p.sThumbRY;
-        }
+    if ((uintptr_t)h == 2) {   // port 1: player 2
+        int pad = Player2Pad();
+        if (pad >= 0) ReadPad(pad, g);
+        LoadScript();
+        static const int btn[8][2] = {{C_DUP, XB_DPAD_UP}, {C_DDOWN, XB_DPAD_DOWN}, {C_DLEFT, XB_DPAD_LEFT},
+                                      {C_DRIGHT, XB_DPAD_RIGHT}, {C_START, XB_START}, {C_BACK, XB_BACK},
+                                      {C_LTHUMB, XB_LTHUMB}, {C_RTHUMB, XB_RTHUMB}};
+        for (auto &b : btn) if (ScriptValue(C_COUNT + b[0]) > 0.5f) g.wButtons |= b[1];   // scripted "P2 ..." presses
+        static const int ab[8] = {C_A, C_B, C_X, C_Y, C_BLACK, C_WHITE, C_LT, C_RT};
+        for (int i = 0; i < 8; i++) if (ScriptValue(C_COUNT + ab[i]) > 0.5f) g.bAnalogButtons[i] = 255;
+        if (ScriptValue(C_COUNT + C_LYP) > 0.5f) g.sThumbLY = 32767;
+    } else if ((uintptr_t)h == 1) {
+        if (!(TwoPlayers() && Player2Pad() == 0)) ReadPad(0, g);
         // keyboard + mouse (only while the game window has focus)
         MouseFrame mf = {(float)InterlockedExchange(&g_mdx, 0), (float)InterlockedExchange(&g_mdy, 0),
                          (float)InterlockedExchange(&g_mwheel, 0)};
@@ -363,7 +432,7 @@ XSTD(DWORD, XInputGetState, 8, (HANDLE h, XB_INPUT_STATE *st)) {
         bool focus = Focused();
         if (focus || !g_script.empty()) {   // (g_script also holds synthetic presses)
             float v[C_COUNT];
-            bool kbm = focus && g_settings.input == IN_KBM;
+            bool kbm = focus && g_settings.input == IN_KBM && !g_textEntry;
             for (int i = 0; i < C_COUNT; i++) {
                 float bv = 0;
                 if (kbm) for (auto &b : g_bind[i]) bv = std::max(bv, BindValue(b, mf));
@@ -383,7 +452,29 @@ XSTD(DWORD, XInputGetState, 8, (HANDLE h, XB_INPUT_STATE *st)) {
             g.sThumbRY = merge(g.sThumbRY, Axis(v[C_RYP], v[C_RYM]));
         }
     }
+    // a competitive match: Back is the scoreboard (competitive.cpp), not the game's controls screen
+    if ((g.wButtons & XB_BACK) && CompetitiveMatch()) {
+        g_backAt = GetTickCount();
+        g.wButtons &= ~XB_BACK;
+    }
     st->dwPacketNumber = ++packet;
     st->Gamepad = g;
     return 0;
+}
+
+// Competitive (competitive.cpp): the scoreboard shows while Tab or Back (either pad, or player 1's Backspace: taken
+// from the game in a match, XInputGetState) is held, or always with GHOSTPC_SHOW_SCORE (tests); the victory screen is
+// skipped with Space or A (either pad, or a scripted A)
+bool ScoreboardHeld() {
+    static bool test = getenv("GHOSTPC_SHOW_SCORE") != nullptr;
+    return test || (Focused() && (GetAsyncKeyState(VK_TAB) & 0x8000)) || GetTickCount() - g_backAt < 150;
+}
+bool SkipPressed() {
+    if (Focused() && (GetAsyncKeyState(VK_SPACE) & 0x8000)) return true;
+    XINPUT_STATE x;
+    for (DWORD i = 0; i < 2; i++)
+        if (PadConnected(i) && XInputGetState(i, &x) == ERROR_SUCCESS && (x.Gamepad.wButtons & XINPUT_GAMEPAD_A))
+            return true;
+    LoadScript();
+    return ScriptValue(C_A) > 0.5f || ScriptValue(C_COUNT + C_A) > 0.5f;
 }

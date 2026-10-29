@@ -5,9 +5,14 @@
 /test/
 /re/
 /tools/
-# the compiled Enemy Zoo and a local SDK copy
+# the compiled Enemy Zoo and Protoss Arena and a local SDK copy
 /levels/zoo/out/
 /levels/zoo/sdk/
+/levels/arena/out/
+# the arena's menu screenshot (game imagery; local only)
+/levels/arena/menu_shot.png
+# GhostPC's data files made from the game's own (Echo's model and textures; local only, packed by make_release.py)
+/assets/
 # release staging: only the patch's text files are tracked; the zips go to GitHub Releases, and the patch's game
 # files (Strings, Misc, Sounds, UI images) stay local
 /release/*
@@ -18,8 +23,16 @@
 /release/GhostPC_Patch/mapsrc/*
 !/release/GhostPC_Patch/mapsrc/README.txt
 !/release/GhostPC_Patch/mapsrc/compile_zoo.bat
+!/release/GhostPC_Patch/mapsrc/arena/
+/release/GhostPC_Patch/mapsrc/arena/*
+!/release/GhostPC_Patch/mapsrc/arena/README.txt
+!/release/GhostPC_Patch/mapsrc/arena/compile_arena.bat
 # logs, dumps, caches
 *.log
 *.dmp
 __pycache__/
 *.pyc
+# texture exports (game art; local only)
+/exports/
+# reskin sources (painted from game textures; local only)
+/skins/

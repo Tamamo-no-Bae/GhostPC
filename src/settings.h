@@ -12,6 +12,7 @@ struct Settings {
     int mouseSensitivity = 100;       // percent
     bool vsync = true;
     bool showAtStartup = true;
+    int matchMinutes = 10;            // competitive time limit
 };
 extern Settings g_settings;
 

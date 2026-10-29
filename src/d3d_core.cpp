@@ -761,6 +761,8 @@ XSTD(DWORD, D3DDevice_Swap, 4, (DWORD flags)) {
     return 0;
 }
 XSTD(HRESULT, D3DDevice_Clear, 24, (DWORD count, const D3DRECT *rects, DWORD flags, D3DCOLOR color, float z, DWORD stencil)) {
+    static UINT logFrame = getenv("GHOSTPC_LOG_HUDFRAME") ? atoi(getenv("GHOSTPC_LOG_HUDFRAME")) : 0;
+    if (logFrame && g_frame == logFrame) Log("hudframe: clear flags %lx viewport %lu,%lu", flags, g_vp.X, g_vp.Y);
     DWORD f = 0;
     if (flags & 0xF0) f |= D3DCLEAR_TARGET;
     if ((flags & 1) && g_curDS) f |= D3DCLEAR_ZBUFFER;
@@ -769,7 +771,13 @@ XSTD(HRESULT, D3DDevice_Clear, 24, (DWORD count, const D3DRECT *rects, DWORD fla
     std::vector<D3DRECT> r;
     for (DWORD i = 0; i < count && rects; i++)
         r.push_back({rects[i].x1 * g_scale, rects[i].y1 * g_scale, rects[i].x2 * g_scale, rects[i].y2 * g_scale});
-    // clear ignores the viewport on Xbox: use the whole target unless rects are given
+    // clear ignores the viewport on Xbox: use the whole target unless rects are given. Except in split screen (two
+    // local players: pRightLocalPlayer, the map's gameMotion_apNames+0x72C), where each player's view clears its own
+    // half (LocalCameras_UpdateSplitScreenDimensions' canvases) and a full clear wiped the left view.
+    static uint32_t names = SymAddr("?gameMotion_apNames@@3PAPADA");
+    if (r.empty() && names && *(void **)(names + 0x72c) && g_vp.Width < g_rtW)
+        r.push_back({(LONG)(g_vp.X * g_scale), (LONG)(g_vp.Y * g_scale), (LONG)((g_vp.X + g_vp.Width) * g_scale),
+                     (LONG)((g_vp.Y + g_vp.Height) * g_scale)});
     D3DVIEWPORT9 full = {0, 0, g_rtW * g_scale, g_rtH * g_scale, 0, 1};
     g_dev->SetViewport(&full);
     g_dev->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
@@ -797,8 +805,61 @@ XSTD(HRESULT, D3DDevice_SetRenderTargetFast, 12, (XSurface *rt, XSurface *ds, DW
 // ---------------------------------------------------------------------------
 // Viewport / scissor / transforms / lights
 static float g_vpScale[4], g_vpOffset[4];
+static void ApplyScissor();
+// Split screen: each player's view (viewport = its canvas: tRenderCamera +0x210 size, +0x214 position, e.g. 0,0 /
+// 320,0 320x480) draws its HUD in full-screen coordinates (radar at 40,456, ammo at 492,438; the objective box with a
+// viewport of its own at 201,39), which D3D clipped to the player's half: only the parts that fell there showed, laid
+// out for the whole screen. With two local players, pre-transformed vertices and viewports other than a player's
+// canvas are mapped from the full screen into the current player's canvas (x * canvas width / 640 + canvas x, y
+// likewise), as cPlayerInfo::GetScreenPos does for the few HUD parts that call it (shell.cpp makes that one an
+// identity). SetHudMapping(false) suspends it (the briefing stays full-screen).
+static bool g_hudOff;
+static void ApplyViewport();
+void SetHudMapping(bool on) { g_hudOff = !on; if (g_dev) ApplyViewport(); }
+// full-screen 2D drawing over a split view (competitive.cpp's match texts): the whole 640x480 screen whatever
+// viewport the game left set, and no HUD mapping
+static bool g_fullScreen2D;
+void SetFullScreen2D(bool on) {
+    static DWORD scissor;
+    g_fullScreen2D = on, g_hudOff = on;
+    if (!g_dev) return;
+    if (on) g_dev->GetRenderState(D3DRS_SCISSORTESTENABLE, &scissor), g_dev->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
+    else g_dev->SetRenderState(D3DRS_SCISSORTESTENABLE, scissor);
+    ApplyViewport();
+}
+static const uint16_t *Canvas(int i) {   // 0/1: left/right local player's canvas (w, h, x, y), 2: the current one's
+    static uint32_t names = SymAddr("?gameMotion_apNames@@3PAPADA");
+    uint8_t *info = names ? *(uint8_t **)(names + (i == 2 ? 0x720 : 0x728 + 4 * i)) : nullptr;
+    uint8_t *sim = info ? *(uint8_t **)(info + 4) : nullptr;
+    uint8_t *cam = sim ? *(uint8_t **)(sim + 0x250) : nullptr;
+    return cam ? (const uint16_t *)(cam + 0x210) : nullptr;
+}
+// the current player's canvas when the HUD is mapped (two local players, a 640x480 target, no shell menu or load
+// screen up), else null
+bool ShellMenuShown();
+static const uint16_t *HudCanvas() {
+    static uint32_t names = SymAddr("?gameMotion_apNames@@3PAPADA");
+    if (g_hudOff || !names || !*(void **)(names + 0x72c) || g_rtW != 640 || g_rtH != 480 || ShellMenuShown()) return nullptr;
+    return Canvas(2);
+}
+static bool IsCanvas(const D3DVIEWPORT9 &v) {
+    for (int i = 0; i < 2; i++)
+        if (const uint16_t *c = Canvas(i))
+            if (v.Width == c[0] && v.Height == c[1] && v.X == c[2] && v.Y == c[3]) return true;
+    return false;
+}
 static void ApplyViewport() {
     D3DVIEWPORT9 v = g_vp;
+    if (g_fullScreen2D && g_rtW == 640 && g_rtH == 480) v.X = v.Y = 0, v.Width = 640, v.Height = 480;
+    else if (const uint16_t *c = HudCanvas()) {
+        if (!IsCanvas(v)) {
+            float sx = c[0] / 640.f, sy = c[1] / 480.f;
+            v.X = (DWORD)(v.X * sx + c[2] + 0.5f), v.Y = (DWORD)(v.Y * sy + c[3] + 0.5f);
+            v.Width = (DWORD)(v.Width * sx + 0.5f), v.Height = (DWORD)(v.Height * sy + 0.5f);
+        }
+    } else if (ShellMenuShown() && g_rtW == 640 && g_rtH == 480 && IsCanvas(v))
+        v.X = v.Y = 0, v.Width = 640, v.Height = 480;   // a shell screen (pause menu, the load screen between
+                                                        // missions) over a split view: the whole screen, not a half
     v.X *= g_scale; v.Y *= g_scale; v.Width *= g_scale; v.Height *= g_scale;
     UINT mw = g_rtW * g_scale, mh = g_rtH * g_scale;
     if (v.X >= mw) v.X = 0;
@@ -813,12 +874,23 @@ static void ApplyViewport() {
 XSTD(HRESULT, D3DDevice_SetViewport, 4, (const D3DVIEWPORT9 *v)) {
     g_vp = *v;
     ApplyViewport();
+    ApplyScissor();
     return 0;
+}
+// Scissor rects are relative to the viewport (split screen: the right-hand player's view at x 320 sets 0,0-320,480),
+// so the D3D9 rect moves with the viewport (ApplyViewport re-applies it)
+static D3DRECT g_scissor;
+static bool g_hasScissor;
+static void ApplyScissor() {
+    if (!g_hasScissor) return;
+    RECT r = {(LONG)((g_scissor.x1 + g_vp.X) * g_scale), (LONG)((g_scissor.y1 + g_vp.Y) * g_scale),
+              (LONG)((g_scissor.x2 + g_vp.X) * g_scale), (LONG)((g_scissor.y2 + g_vp.Y) * g_scale)};
+    g_dev->SetScissorRect(&r);
 }
 XSTD(HRESULT, D3DDevice_SetScissors, 12, (DWORD count, BOOL exclusive, const D3DRECT *rects)) {
     if (!count || !rects) { SetRS(D3DRS_SCISSORTESTENABLE, FALSE); return 0; }
-    RECT r = {rects[0].x1 * g_scale, rects[0].y1 * g_scale, rects[0].x2 * g_scale, rects[0].y2 * g_scale};
-    g_dev->SetScissorRect(&r);
+    g_scissor = rects[0], g_hasScissor = true;
+    ApplyScissor();
     SetRS(D3DRS_SCISSORTESTENABLE, !exclusive);
     return 0;
 }
@@ -1564,10 +1636,18 @@ static UINT UploadVertices(XVertexShader *vs, bool ffVertex, int first, UINT cou
         g_vtmp.resize((size_t)stride * count);
         __try { memcpy(g_vtmp.data(), src + (size_t)first * stride, (size_t)stride * count); }
         __except (EXCEPTION_EXECUTE_HANDLER) { Log("d3d: bad vertex read"); return 0; }
-        if ((fvf & D3DFVF_POSITION_MASK) == D3DFVF_XYZRHW && g_scale != 1)
+        static UINT logFrame = getenv("GHOSTPC_LOG_HUDFRAME") ? atoi(getenv("GHOSTPC_LOG_HUDFRAME")) : 0;
+        if (logFrame && g_frame == logFrame && (fvf & D3DFVF_POSITION_MASK) == D3DFVF_XYZRHW) {   // debug: 2D draws
+            const float *p = (const float *)g_vtmp.data();
+            Log("hudframe: rhw %u verts at %.0f,%.0f mapped %d viewport %lu,%lu", count, p[0], p[1], HudCanvas() != nullptr, g_vp.X, g_vp.Y);
+        }
+        const uint16_t *c = (fvf & D3DFVF_POSITION_MASK) == D3DFVF_XYZRHW ? HudCanvas() : nullptr;
+        bool split = c != nullptr;
+        float sx = split ? c[0] / 640.f : 1, sy = split ? c[1] / 480.f : 1, ox = split ? c[2] : 0, oy = split ? c[3] : 0;
+        if ((fvf & D3DFVF_POSITION_MASK) == D3DFVF_XYZRHW && (g_scale != 1 || split))
             for (UINT i = 0; i < count; i++) {
                 float *p = (float *)(g_vtmp.data() + i * stride);
-                p[0] = (p[0] + 0.0f) * g_scale; p[1] = (p[1] + 0.0f) * g_scale;
+                p[0] = (p[0] * sx + ox) * g_scale; p[1] = (p[1] * sy + oy) * g_scale;
             }
         // debug: GHOSTPC_LOGBLEND: vertex alphas of the first BLENDDIFFUSEALPHA (stage 1) draw of each frame
         static bool logBlend = getenv("GHOSTPC_LOGBLEND") != nullptr;

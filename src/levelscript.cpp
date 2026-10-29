@@ -40,6 +40,8 @@
 // player_start: the game creates the player at the world origin; this moves her there 5 frames after the level loads,
 // so a level can use its origin for something else (the zoo's sniper arena: his animations are in world coordinates).
 #include "common.h"
+#include <array>
+#include <utility>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -71,6 +73,9 @@ struct FlyPath {
 static std::vector<FlyPath> g_flyPaths;   // fly_path
 float g_start[4];         // player_start x y z yaw
 bool g_hasStart;
+float g_start2[4];        // player2_start x y z yaw: player 2's start (else 1 m beside player 1)
+bool g_hasStart2;
+std::vector<std::array<float, 4>> g_respawns;   // respawn x y z yaw: competitive revive points (shell.cpp)
 uint8_t *g_lastAI;        // last AI instance a notify reached (GHOSTPC_TANAGAZJ_DEBUG)
 UINT g_lastAIFrame;
 
@@ -93,7 +98,8 @@ void Load(const char *level) {
     g_sunkenLOS = false;
     g_unpin.clear();
     g_flyPaths.clear();
-    g_hasStart = false;
+    g_hasStart = g_hasStart2 = false;
+    g_respawns.clear();
     char path[MAX_PATH];
     _snprintf(path, MAX_PATH, "%s\\Levels\\%s.gpc", g_gameDir, level);
     FILE *f = fopen(path, "r");
@@ -107,6 +113,15 @@ void Load(const char *level) {
         if (sscanf(line, " player_start %f %f %f %f", &st[0], &st[1], &st[2], &st[3]) >= 3) {
             memcpy(g_start, st, sizeof st);
             g_hasStart = true;
+            continue;
+        }
+        if (sscanf(line, " player2_start %f %f %f %f", &st[0], &st[1], &st[2], &st[3]) >= 3) {
+            memcpy(g_start2, st, sizeof st);
+            g_hasStart2 = true;
+            continue;
+        }
+        if (sscanf(line, " respawn %f %f %f %f", &st[0], &st[1], &st[2], &st[3]) >= 3) {
+            g_respawns.push_back({st[0], st[1], st[2], st[3]});
             continue;
         }
         char track[128];
@@ -277,6 +292,10 @@ bool AnyDamaged(uint8_t *world, uint32_t vtable) {
     return false;
 }
 }   // namespace
+// for shell.cpp (competitive respawns): the level script's respawn points and the player warp
+const std::vector<std::array<float, 4>> &LevelRespawns() { return g_respawns; }
+void LevelWarpPlayer(uint8_t *player, const float *p) { WarpPlayer(player, p); }
+uint8_t *LevelWorld() { return CurrentWorld(); }
 
 // cAIBossTanagazj was never registered in this build and has two bugs, fixed here when it is registered:
 //  1. it overrides HasShield (vtable +0x53C) but not GetShield (+0x538), so cAIInstance::UpdateShield used the base
@@ -883,6 +902,17 @@ static void FixLurkerDamage() {
         }
     }
     if (n != 2) Log("levelscript: Lurker burrowed damage: %d of 2 call sites changed", n);
+}
+// Aries (cAIBossSniper::FireSniperProjectile) fires cAIInstance::FireInstantProjectile with 25 damage a shot
+// (push 25.0f at +0x16); raised to 80.
+static void FixSniperDamage() {
+    uint8_t *fn = (uint8_t *)SymAddr("?FireSniperProjectile@cAIBossSniper@@AAEXXZ");
+    if (!fn || fn[0x16] != 0x68 || *(uint32_t *)(fn + 0x17) != 0x41c80000) {
+        Log("levelscript: unexpected cAIBossSniper::FireSniperProjectile, Aries keeps 25 damage a shot");
+        return;
+    }
+    uint32_t v = 0x42a00000;   // 80.0f
+    WriteCode(fn + 0x17, &v, 4);
 }
 static void TrackLurkerSpikes() {
     TrackLurkerRoars();
@@ -1574,7 +1604,7 @@ static void RegisterMissingAIClasses() {
     if (!detectorFixed) detectorFixed = true, FixDetectorClass(), HookDemoAnimsDamaged(), HookLoadWorld(), HookSaveRestore(), FixUltraliskLOS(), FixUltraliskTusks(), FixUltraliskStomp(),
                           FixSunkenColony(), FixStillProjectiles(),
                           FixLurkerSounds(), InstallFlyDebug(),
-                          FixOverlordFlight(), FixFlyerPatrol(), FixLurkerDamage(), FixPurifierBeam(),
+                          FixOverlordFlight(), FixFlyerPatrol(), FixLurkerDamage(), FixSniperDamage(), FixPurifierBeam(),
                           FixGoliathBoss(), FixVultureSight(),
                           FixScoutFlight();   // all levels
     static bool enabled = getenv("GHOSTPC_NO_TANAGAZJ_AI") == nullptr;
@@ -1842,6 +1872,119 @@ static void ResetUnitTables() {
     memset(g_overlordHome, 0, sizeof g_overlordHome);
     memset(g_scoutSearch, 0, sizeof g_scoutSearch);
 }
+// debug (GHOSTPC_LOG_POS): every 30 frames, the local players' positions (tThing +0xB0) and camera yaw (tSimCamera
+// +0x20C, cPlayerInfo +4), in level-script form
+static void LogPositions() {
+    static bool on = getenv("GHOSTPC_LOG_POS") != nullptr;
+    if (!on || g_frame % 30) return;
+    uint32_t names = SymAddr("?gameMotion_apNames@@3PAPADA");
+    for (int i = 0; i < 2; i++) {
+        uint8_t **info = *(uint8_t ***)(names + 0x728 + 4 * i);
+        uint8_t *p = info ? info[0] : nullptr, *cam = info ? info[1] : nullptr;
+        if (!p) continue;
+        const float *q = (const float *)(p + 0xb0);
+        Log("pos: player %d %.2f %.2f %.2f yaw %.0f", i + 1, q[0], q[1], q[2], cam ? *(float *)(cam + 0x20c) : 0.f);
+    }
+}
+// debug (GHOSTPC_WARP="x y z yaw [frame]", GHOSTPC_WARP2 likewise): move player 1 there <frame> (default 60) frames
+// after the load; WARP2 a second move (e.g. after a cutscene the first one triggered); player 2 1.5 m to her right
+static void DebugWarp() {
+    static float w[2][5];
+    static int n[2] = {-1, -1};
+    static const char *vars[2] = {"GHOSTPC_WARP", "GHOSTPC_WARP2"};
+    UINT f = g_frame - g_loadFrame;
+    for (int i = 0; i < 2; i++) {
+        if (n[i] < 0) {
+            const char *e = getenv(vars[i]);
+            n[i] = e ? sscanf(e, "%f %f %f %f %f", &w[i][0], &w[i][1], &w[i][2], &w[i][3], &w[i][4]) : 0;
+            if (n[i] < 5) w[i][4] = 60;
+        }
+        if (n[i] < 4 || f != (UINT)w[i][4]) continue;
+        uint32_t names = SymAddr("?gameMotion_apNames@@3PAPADA");
+        uint8_t **l = *(uint8_t ***)(names + 0x728), **r = *(uint8_t ***)(names + 0x72c);
+        // GHOSTPC_WARP_SWAP=1: player 2 on the second warp's spot, player 1 beside her; =2: on both
+        static int swap = getenv("GHOSTPC_WARP_SWAP") ? atoi(getenv("GHOSTPC_WARP_SWAP")) : 0;
+        if ((swap == 2 || (swap == 1 && i == 1)) && r && r[0]) std::swap(l, r);
+        // GHOSTPC_WARP2_ONLY=1: the second warp moves player 2 alone, onto its spot (e.g. into player 1's line of fire)
+        static bool p2only = getenv("GHOSTPC_WARP2_ONLY") != nullptr;
+        if (i == 1 && p2only) {
+            if (r && r[0]) WarpPlayer(r[0], w[i]);
+            if (r && r[1]) *(float *)(r[1] + 0x20c) = w[i][3];
+            Log("warp: player 2 to %.1f %.1f %.1f yaw %.0f (frame %u)", w[i][0], w[i][1], w[i][2], w[i][3], f);
+            continue;
+        }
+        if (l && l[0]) {
+            WarpPlayer(l[0], w[i]);
+            if (l[1]) *(float *)(l[1] + 0x20c) = w[i][3];   // her camera (cPlayerInfo +4 tSimCamera, yaw +0x20C) too
+        }
+        if (r && r[0]) {
+            float a = w[i][3] * 0.0174533f, p2[4] = {w[i][0] + 1.5f * cosf(a), w[i][1] + 1.5f * sinf(a), w[i][2], w[i][3]};
+            WarpPlayer(r[0], p2);
+            if (r[1]) *(float *)(r[1] + 0x20c) = w[i][3];
+        }
+        Log("warp: player 1 to %.1f %.1f %.1f yaw %.0f (frame %u)", w[i][0], w[i][1], w[i][2], w[i][3], f);
+    }
+}
+static void CalldownTest(uint8_t *world) {
+    LogPositions();
+    DebugWarp();
+    // debug (GHOSTPC_CALLDOWN_TEST=<n>): 60 frames after the load, list the Overlords (model overlord*.nod) and move
+    // player 1 (and player 2) next to a ground unit near the n-th listed (-1: the nearest), facing it
+    const char *e = g_frame - g_loadFrame == 60 ? getenv("GHOSTPC_CALLDOWN_TEST") : nullptr;
+    if (e && g_frame - g_loadFrame == 60) {
+        int pick = -1, k = 0;
+        sscanf(e, "%d", &pick);
+        uint32_t names = SymAddr("?gameMotion_apNames@@3PAPADA");
+        uint8_t **l = *(uint8_t ***)(names + 0x728), **r = *(uint8_t ***)(names + 0x72c);
+        uint8_t *p1 = l ? l[0] : nullptr;
+        float best = 1e30f, ov[3] = {};
+        __try {
+            uint32_t sectors = *(uint32_t *)(world + 0xdc);
+            uint8_t *sector = *(uint8_t **)(world + 0xe0);
+            for (uint32_t i = 0; i < sectors; i++, sector += 0x110)
+                for (uint8_t *t = *(uint8_t **)(sector + 0x24); t; t = *(uint8_t **)(t + 0x28)) {
+                    uint8_t *inst = *(uint8_t **)(t + 0x2a0);
+                    uint8_t *model = inst ? *(uint8_t **)inst : nullptr;
+                    if (!model || _strnicmp((const char *)(model + 0x8c), "overlord", 8)) continue;
+                    const float *q = (const float *)(t + 0xb0), *pp = p1 ? (const float *)(p1 + 0xb0) : q;
+                    float d = (q[0] - pp[0]) * (q[0] - pp[0]) + (q[1] - pp[1]) * (q[1] - pp[1]);
+                    Log("calldown test: %s at %.1f %.1f %.1f (%.0f m from player 1 at %.1f %.1f %.1f)",
+                        (const char *)(model + 0x8c), q[0], q[1], q[2], sqrtf(d), pp[0], pp[1], pp[2]);
+                    if (pick >= 0 ? k == pick : d < best) best = d, memcpy(ov, q, sizeof ov);
+                    k++;
+                }
+        } __except (EXCEPTION_EXECUTE_HANDLER) {}
+        // where to stand: beside the ground unit (an AI actor 3+ m below the Overlord) nearest to it, 8-40 m away
+        // (its feet are on the floor; a guessed height dropped Nova out of the world)
+        float ground[3] = {}, gbest = 1e30f;
+        __try {
+            uint32_t sectors = *(uint32_t *)(world + 0xdc);
+            uint8_t *sector = *(uint8_t **)(world + 0xe0);
+            for (uint32_t i = 0; best < 1e29f && i < sectors; i++, sector += 0x110)
+                for (uint8_t *t = *(uint8_t **)(sector + 0x24); t; t = *(uint8_t **)(t + 0x28)) {
+                    if (!*(uint8_t **)(t + 0x3c4)) continue;   // AI actors only
+                    const float *q = (const float *)(t + 0xb0);
+                    float d = (q[0] - ov[0]) * (q[0] - ov[0]) + (q[1] - ov[1]) * (q[1] - ov[1]);
+                    if (q[2] > ov[2] - 3 || d < 64 || d > 1600 || d >= gbest) continue;
+                    gbest = d, memcpy(ground, q, sizeof ground);
+                }
+        } __except (EXCEPTION_EXECUTE_HANDLER) {}
+        if (p1 && gbest < 1e29f) {
+            float dx = ov[0] - ground[0], dy = ov[1] - ground[1], len = sqrtf(dx * dx + dy * dy);
+            dx /= len, dy /= len;
+            float at[4] = {ground[0] - dy * 1.5f, ground[1] + dx * 1.5f, ground[2] + 0.2f, atan2f(-dx, dy) * 57.29578f};
+            WarpPlayer(p1, at);
+            Log("calldown test: player 1 to %.1f %.1f %.1f yaw %.0f (%.0f m from the Overlord, beside a ground unit)",
+                at[0], at[1], at[2], at[3], len);
+            if (r && r[0]) {
+                float at2[4] = {ground[0] + dy * 1.5f, ground[1] - dx * 1.5f, ground[2] + 0.2f, at[3]};
+                WarpPlayer(r[0], at2);
+            }
+        } else
+            Log("calldown test: no ground unit near the Overlord");
+    }
+}
+
 void LevelScriptUpdate() {
     g_crumb = "levelscript: start";
     RegisterMissingAIClasses();
@@ -1859,6 +2002,19 @@ void LevelScriptUpdate() {
             g_frame, g_worldLoads);
         g_crumb = "levelscript: stale check (load)";
         CheckStaleTables(world, world != g_loadedWorld ? "level load" : "restart");
+        if (getenv("GHOSTPC_LOG_STARTS")) {   // debug: the level's player starts (tWorld +0xF0/+0xF4 and +0x100/+0x104,
+                                              // 0x60-byte tPlayerStart: matrix +0x10, number +0x50, order +0x54)
+            for (int list = 0; list < 2; list++) {
+                unsigned n = *(unsigned *)(world + (list ? 0x100 : 0xf0));
+                uint8_t *s = *(uint8_t **)(world + (list ? 0x104 : 0xf4));
+                Log("starts: list %d: %u", list, n);
+                for (unsigned i = 0; s && i < n && i < 64; i++, s += 0x60) {
+                    const float *m = (const float *)(s + 0x10);
+                    Log("starts:   number %u order %u at %.1f %.1f %.1f", *(unsigned *)(s + 0x50), *(unsigned *)(s + 0x54),
+                        m[12], m[13], m[14]);
+                }
+            }
+        }
         ResetUnitTables();   // its units are new, or back at the level start
         g_loadedWorld = world;
         seenLoads = g_worldLoads;
@@ -1883,6 +2039,7 @@ void LevelScriptUpdate() {
     if (g_frame % 30 == 0) AddScoutMarkers(world);
     g_crumb = "levelscript: Scouts home";
     if (g_frame % 15 == 0) DriveScoutsHome(world);
+    CalldownTest(world);
     g_crumb = "levelscript: commands";
     static bool probeDebug = getenv("GHOSTPC_PROBE_DEBUG") != nullptr;
     if (probeDebug) DebugProbe(world);
@@ -1904,12 +2061,23 @@ void LevelScriptUpdate() {
     if (g_cmds.empty() && !g_hasStart) return;
     uint8_t *player = GuardedPlayer();
     if (!player) return;
-    // the player is (re)created at the world origin: move her once she is there (not the previous level's player)
-    const float *pp0 = (const float *)(player + 0xb0);
+    // the player is (re)created at the world origin: move her once she is there (not the previous level's player).
+    // In co-op both: player 1 (pLeftLocalPlayer -> cPlayerInfo +0 tPlayer; GuardedPlayer is the current local player,
+    // which may be either) to the start, player 2 (pRightLocalPlayer) 1 m to her side.
+    uint32_t names = SymAddr("?gameMotion_apNames@@3PAPADA");
+    uint8_t **left = names ? *(uint8_t ***)(names + 0x728) : nullptr, **right = names ? *(uint8_t ***)(names + 0x72c) : nullptr;
+    uint8_t *p1 = left && left[0] ? left[0] : player;
+    const float *pp0 = (const float *)(p1 + 0xb0);
     if (g_hasStart && g_frame - g_loadFrame >= 5 && fabsf(pp0[0]) < 3.f && fabsf(pp0[1]) < 3.f) {
-        WarpPlayer(player, g_start);
+        WarpPlayer(p1, g_start);
         Log("levelscript: player_start: moved the player to %.1f %.1f %.1f (yaw %g)", g_start[0], g_start[1], g_start[2],
             g_start[3]);
+        if (right && right[0] && right[0] != p1) {
+            float a = g_start[3] * 0.0174533f, p2[4] = {g_start[0] + cosf(a), g_start[1] + sinf(a), g_start[2], g_start[3]};
+            if (g_hasStart2) memcpy(p2, g_start2, sizeof p2);
+            WarpPlayer(right[0], p2);
+            Log("levelscript: player_start: player 2 to %.1f %.1f", p2[0], p2[1]);
+        }
         g_hasStart = false;
     }
     if (g_hasStart || g_frame - g_loadFrame < 10) return;   // boxes wait until she is where the level starts her

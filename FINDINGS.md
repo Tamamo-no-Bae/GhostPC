@@ -508,3 +508,233 @@ scripts/nsdthings.py (placed things in Levels/*.nsd).
   A/start/start with both events = load. Wrapped Init: X -> 0x45B + index, "{x} Delete" (MNU_X_DELETE) in box 3.
   Tested on a backup of save\U: the profile's folder is deleted, the list returns. Zoo unlock: IsMissionUnlocked
   (NSI/NOVA names or the unlock cheat unlock all) also returns 1 for mission ID 9_1_ZOO.
+
+## 2026-10-29: Multiplayer in the build (investigation)
+- Local only: one source file, game\gamelib\gamemultiplayer.cpp (PDB source list); no game network code at all.
+  XNet is linked but only hkBsdSockServer (Havok visual debugger) opens sockets; pXBoxLiveEngine (ILiveEngine, an
+  empty forward-declared type) is never read or written.
+- Two local players, split screen left/right: statics pLeftLocalPlayer 0x828528 / pRightLocalPlayer 0x82852C
+  (cPlayerInfo *, named in the PDB; the map labels them gameMotion_apNames+728/+72C). LocalCameras_UpdateSplitScreen
+  Dimensions halves the width (tRenderCamera::SetCanvas, cPlayerInfo +4 = tSimCamera, +0x250 render camera);
+  UpdateControls runs simControl per player after stdInput_SetCurrentGamepad(info +0x10 pad). Max 2
+  (CmdNewPlayer refuses a third). Per-player HUD, a score display (cUIScore), MP branches in cPlayerControl::
+  UpdateDead, tActor::Kill/Revive, DropPowerup.
+- Shell: Menu_Multiplayer (menu 28: Cooperative -> state 0x29, Competitive -> 0x2B), Menu_SelProfileMultiCoop/Comp
+  (20/21, "Select Profile for Player 2"), Menu_MultiCoop/Comp (31/32, mission select). States 0x22/0x23/0x24 open
+  menus 28/31/32 (UpdateState jump table, index = state - 1; menu table in LoadMenu, id = index + 1). Nothing raises
+  0x22: Menu_Main has only Resume Campaign (0x27), Options (0x2C), Debug (0xE, mainOptions_bDebugMenu). Co-op/comp
+  need 2 profiles (P0 then P1 via State_LoadProfile) and load ghostmpcoop.nsc / ghostmpcomp.nsc (gameChronicle_
+  LoadMPCOOP/COMP), which are not in the build (Misc has ghostsp.nsc, ghostsp2.nsc). The second-player flag is
+  cShell +0x6E34 (gameMultiplayer_BeginGame creates a second player when set; State_SelectProfileSinglePlayer
+  clears it). No MP levels: Levels has the SP missions only.
+- Test (GHOSTPC_TEST_P2=<frame>: CmdNewPlayer in a running level): the screen splits, both HUDs and score counters
+  draw, but the world renders black in both halves (GhostPC's D3D9 layer and the split canvases), player 2 spawns
+  at the world origin. CmdNewPlayer left the new camera's region (tSimCamera +0x188) at 0xCCCCCCCC (a level load
+  sets it): crash in UpdateCameraRegion; the test clears it.
+- Player 2 (and player 1) in every mode: gameMultiplayer_CreatePlayer(mainOptions_aPlayerTemplate = "nova", the
+  default; a hashed command-line switch can change it), same stats/weapons/powers; gameMultiplayer_New takes the
+  first free of two 0xA4-byte cPlayerInfo slots (0x8283D0); cPlayerInfo::Init builds only camera and HUD. No
+  per-player skin, model or tint anywhere: player 2 is a second, identical Nova.
+- Nova templates: Nova_red, Nova_bl, Nova_br, Nova_ice (based on Nova / Nova_red) set nothing of their own (no
+  model, material or shader: placeholders; templates have no material/skin property at all, only editorcolor).
+  NovaReduxFinal names novaReduxFinal.nod (not in the build; nova.nod itself uses NovaReduxFinal_* materials).
+  Nova_DT = nova_DT.nod (Dark Templar armour: textures NovaDarkTemplar.dds / Nova_DT_New.dds exist, its six
+  materials Nova_DT_* are defined in no .nsa). Nova_Artemis = artemis.nod.
+- Skeletons (NOD header byte 5 = bone count, 64-byte bones, parent at +62): nova.nod 43 (face bones under the head,
+  plain hands); nova_DT.nod, novaFaceCovered.nod, artemis.nod 32 (the old skeleton: 43 = 32 plus face bones, the
+  arm/leg chains map one to one, so nova_DT could be converted to the new skeleton); Ghost_male.nod 40 (no face,
+  jointed fingers, different hierarchy). nova.nms 137 modes vs ghost_male.nms 42 (22 shared; no ladders, poles,
+  ledges, snipe, melee, psi): the male Ghost as a player is tabled. About 25 Nova animations reach only bone 31
+  (old-skeleton leftovers).
+- Player starts: tWorld +0xF0/+0xF4 and a second list +0x100/+0x104 (tPlayerStart 0x60 bytes: number +0x50, order
+  +0x54; loaded by gameScene_Load). cPlayerInfo::BeginLevel places the right-hand player with order 1, the left with
+  0 (PlacePlayer -> FindPlayerStart(number, order), falling back to a start with the same number). Every shipped
+  mission has only order-0 starts (1_3_1a also number 9), the second list is always empty, the zoo has none
+  (GHOSTPC_LOG_STARTS=1 logs them): no co-op starts anywhere; player 2 would start on player 1.
+- Competitive: the same menus as co-op (profile per player, mission select); no character, colour or team choice.
+  ghostmpcoop/comp.nsc may set "gametype" (cChronicle +4) and "profileid" (+0); gametype is only read by
+  cShellMissionSelect::Init (mission pictures). No player model options in any mode.
+- Player starts in the files: in the .nsd, after the entity records (the trailer's "auxiliary world arrays", which
+  MAPtoNSD writes as zero counts: the zoo has none), a uint32 count and count x 0x3C-byte tPlayerStartFile records
+  (sectorID, 4x3 matrix: rotation rows then position, number, order). gameScene_Load reads the count and the records
+  sequentially (stdFile_Read, no offset table), so a record can be inserted (count + 1). Found by position: e.g.
+  1_2_1_Miners_Bunker.nsd 0x4AC9D (count 1 before it, sector 12, number 0, order 0, at -82.6 -171.0 0.125).
+- Level transitions with two players: cLevelChange (region script; Entered / Triggered) calls
+  ScriptSequence::ChangeLevel -> tSequence::ChangeLevel / DoChangeLevel: TerminateLevel (gameMultiplayer_EndLevel:
+  both cPlayerInfo::EndLevel; PlayerEndLevel frees effects/physics, WorldRemove - the players survive), StartLevel
+  (LoadMap, then BeginLevel(world, start number +0x90, flags): both players placed at their start with that number,
+  order 0 / 1), then gameMultiplayer_LocalChronicle_SetPlayerData -> cChronicle::SetPlayerData for both. Entered
+  only reacts to ScriptPlayer::IsPrimaryPlayer (a player-controlled Nova on foot: GetOldPlayer empty; either
+  player) or a tank/Goliath/Vulture: either player moves both to the next sub-level. Each start number that a level
+  change targets needs an order-1 start for player 2 (else he lands on player 1).
+- Death with two players: cPlayerControl::UpdateDead, when not single player, revives the dead player in place at
+  full health (tActor::Revive(1, 1)) on a button press of his own pad; restart / save / death menus are the
+  ...SinglePlayer functions only.
+- NOD layout (confirmed on nova.nod / nova_DT.nod): header 92 bytes (byte 4 shaders, 5 bones, 6 vertex sets, 7 mesh
+  groups), 32-byte shader names, 64-byte bones (rest position, 3x3 rotation, inverse-root translation +48, parent
+  +62), vertex data, indices, 56-byte mesh groups (cMeshGroup::ReadFile: shader index +0, LOD ranges +4, flags
+  +0x1E, bone palette aBones[20] +0x21, numBones +0x35, vertex set +0x36; vertices index the palette), marker count +
+  52-byte markers (bone, type, uint16 index, 4x3 matrix), 4 zero bytes.
+- Nova_DT converted (scripts/convert_nova_dt.py -> game\3D\Models\nova_DT43.nod, a new file): nova.nod's 43 bones
+  and 39 markers, DT's palettes renumbered (old 0-6 same, ponytail 7-13 -> 9-12, arms 14-21 -> 25-32, hips/legs
+  22-30 -> 33-41, 31 -> 42; the rest positions are identical; DT uses no ponytail bones). Tested as the player
+  (GHOSTPC_PLAYER_TEMPLATE=Nova_DT with the file in place of nova_DT.nod): animates correctly with nova.nms, rifle on
+  the back; untextured until its six Nova_DT_* materials are defined.
+- Nova's textures for reskins: scripts/export_textures.py -> exports\nova_textures (colour / alpha / rgba PNGs; the
+  suit's alpha is a gloss/glow mask, which is why viewers show it near-black).
+- Materials: cShader::LoadArchives (worldEffects_Startup, unless bundles mode) opens each archive named in
+  Materials\shaderlist.txt with cShader::OpenArchive(name, 0x32), which indexes every material name in
+  cShader::pHashtable for loading by name. GhostPC opens one more, Materials\ghostpc.nsa (source in
+  assets\Materials), once that table exists (calling it on frame 0 crashed in stdHashtable_Find). It defines Nova_DT's
+  seven materials, textures chosen by where each material's UVs fall (scripts/nod_uvmap.py draws them over textures):
+  Nova_DT_New = armour plates (Nova_DT_Armor_gloss), white bodysuit (Nova_DT_Armor_light, ghostsuit like Nova's
+  NovaReduxFinal_Lights), lights (Nova_DT_New_full, fullbright), hair (Nova_DT_New) and the rifle
+  (ghostRifle_unarmed; painted into the suit texture); NovaDarkTemplar = the helmet (nova_DT_glow) and straps, cloth
+  and claws (Nova_DT_gloss). A first guess by name put armour on NovaDarkTemplar: scrambled. Tested: correct.
+- Default Nova (nova.nod) materials and mesh groups: NovaReduxFinal_gloss 18 (glossenvmap), NovaFace04_hair 14
+  (masked), NovaReduxFinal_Lights 12 (ghostsuit, envmap bandtest), NovaReduxFinal_glo 12 (glow), NovaFace04 8
+  (normal), NovaReduxFinal_unarmed 2, NovaEyelashes 2 (masked), ghostRifleNEW2_unarmed 1, GhostPistol_unarmed 1;
+  all in 3dMaterials.nsa and global.nsa.
+
+## 2026-10-29: Co-op restored (split screen)
+- Main menu: "Multiplayer" button under Select Profile (Menu_Main patched: one more button, Options a row down and
+  button 2) -> Menu_Multiplayer (28). Competitive is left as it was (no ghostmpcomp.nsc; to be looked at later).
+  Cooperative needs state 0x22 in the shell's state history (cShell +0x6EC0 slot 1): only then does
+  State_SelectProfileCoop load ghostmpcoop.nsc and the UI profile list (mainProfile_UILoadAll; without it
+  mainProfile_pUIProfiles is null and it crashes), so tests must press the button, not write the state.
+- Misc\ghostmpcoop.nsc: scripts/make_coop_chronicle.py (ghostsp.nsc with PROFILEID 1, GAMETYPE 1: co-op progress in
+  its own slot, so missions start locked).
+- Player 2: template Nova_ice with nova_ice.nod (P2CreatePlayer on BeginGame's / CmdNewPlayer's second
+  CreatePlayer). Start: P2FindStart in PlacePlayer gives order 1 a copy of the order-0 start 1 m to the side (origin
+  when a level has no starts).
+- Pads: original bug in gameMultiplayer_UpdateControls / UpdateCameras(Basic) / UpdateRender: the inlined "make
+  current" selected the previous player's pad before switching (0x828520), swapping the two players' controls.
+  Fixed (pad read from esi). Ports: port 0 = keyboard/mouse (+ XInput pad 0), port 1 = XInput pad 1, or pad 0 when
+  player 1 is on keyboard/mouse (port 0 then drops pad 0 while two players are in).
+- Rendering: SetCanvas splits 640 into two 320-wide canvases (viewports x 0 / 320). Clear (full-target in GhostPC)
+  now clears only the viewport in split screen (it had wiped the left view). Scissor rects are viewport-relative
+  (the right view sets 0,0-320,480): GhostPC offsets them by the viewport (sector geometry - ground, canyon walls -
+  was clipped away in the right view). renderMain_renderCount advances per tWorld::Draw, so RenderTerrain's
+  once-per-frame stamp is per view; Borgo's ground is sector geometry, not cRenderTerrain.
+- Open:
+- HUD (fixed): each player's view (viewport = its canvas) draws its HUD - radar, health bars and objective box
+  during its world render (vuiMiniMap_Render), weapons/ammo in gameMultiplayer_UpdateUI's per-player
+  tSequence::UpdateUi - with pre-transformed vertices in full-screen coordinates (crosshair around 320,240), which
+  D3D clips to the player's half; only cPlayerInfo::GetScreenPos users were mapped (vui_DrawQuad with flag 1,
+  vui_RescaleScreenQuad). GhostPC's D3D layer now maps pre-transformed vertices, and viewports other than a canvas
+  (the objective box sets 201,39), into the current player's canvas while two players play and no shell menu / load
+  screen is up; GetScreenPos is an identity. Shared parts stay full-screen as in single player: vuiBriefing_Update
+  (briefing, dialogue windows) and cMiniMap::DrawHint (objective box). GHOSTPC_LOG_HUDFRAME=<frame> logs one frame's
+  2D draws. Cutscene dialogue assumed to be the briefing's windows (not checked in a cutscene yet).
+- Whose HUD: HUD code asks gameMultiplayer_GetFirstLocalPlayer (player 1) - health bars, timer bar (searching), crosshair
+  state, radar, calldown UI setup, IsValidTargetUI / IsFriendUI - so both halves showed player 1's. Those calls now go
+  to the current local player (11 call sites). Mouse look turns player 1's camera only (camera.cpp).
+- Co-op deaths: tActor::Kill opens the death menu only when gameMultiplayer_IsSinglePlayerGame; cPlayerControl::
+  UpdateDead revives in place on a button press otherwise (competitive). Both checks answer "single player" in co-op
+  (chronicle game type 1). Falling: FailMission(HUD_DEATH_FALL) reads "Echo fell to her death." for player 2.
+- Shell screens over a split view (pause menu, the load screen between missions) get the whole-screen viewport (they
+  were clipped to the right player's canvas).
+- Profile names: typed on the PC keyboard into cShellKeyboard (+0xAC text, +0xB4 index, +0xA0 first key, +0xA4
+  state): characters, Backspace, Enter (IsValidName -> Done), Esc -> Cancel; the keyboard's pad bindings are off then.
+- Co-op mission select: Menu_MultiCoop now sets the menu's +0x2C flag and name MNU_SEL_MISSION like
+  Menu_MissionSelect (the list fits and scrolls; it had another layout running off the screen).
+- GHOSTPC_AUTOCOOP=<n> picks mission n.
+- Zoo in co-op: the level script's player_start warps player 1 (pLeftLocalPlayer, not GuardedPlayer: that is the
+  current local player, either one) and player 2 1 m to her side. Other levelscript uses of GuardedPlayer still mean
+  "the current local player" in co-op.
+- Reticle on both screens: vuiTarget_Draw (from vui_Update, once per player's HUD) keeps its aiming state in globals
+  (0x7D69D0 keep-drawing counter, 0x7C3AD8 aiming control type); player 1's aim left them set for player 2's pass.
+  Each local player now has its own copy. gameMultiplayer_UpdateRender's pad selection ([edx+0x10]) fixed as well.
+- Irradiate / calldown UI missing in co-op: the aim target is one global (0x87B0C8, effectManager_Manager+0x1F80, the
+  GUID the aiming player points at), written by every player's cEffectLaserSight::Render (owner +0x5C) and
+  tPlayerCalldown::GetTarget (8 calldown vtables, slot 1; player +0x10) and read by the HUD (cUICalldown::DrawTarget,
+  reticle, callouts) and UpdateAssistTarget. Player 2's write cleared player 1's target before her calldown UI drew.
+  Now one copy per local player: writers use their owner's, the MP loops' per-player sections (their
+  stdInput_SetCurrentGamepad calls) switch to the current player's. Not yet confirmed in game.
+- Calldown minigame: cUICalldown (one per player's cUISelect) updates outside the players' sections, with player 2's
+  gamepad and aim target: her B drove both minigames, player 1's never started. cUICalldown::Update (vtable slot 3)
+  now runs with its owner's pad (cPlayerInfo +0x10) and aim copy. GHOSTPC_LOG_CALLDOWN=1 logs each player's state.
+- Irradiate in co-op (fixed, tested in 1_2_1): four shared states, all per player now -
+  - the aim target 0x87B0C8 and the calldown target 0x87B0CC (effectManager+0x1F80/0x1F84): swapped per player in
+    the MP loops' sections; a laser drawn in the other player's view no longer clears its owner's target;
+  - ScriptPlayer::SetCalldownEnabled / EnablePlayerWeapon / DisablePlayerWeapon apply to both local players;
+  - tPlayerCalldown::Update (slot 4 of all 8 calldown vtables) runs outside the sections and read player 2's pad for
+    "B still held": player 1's calldown stopped the frame it started. It runs with its owner's pad now.
+  Test: GHOSTPC_WARP / GHOSTPC_WARP2="x y z yaw frame" (warps, camera yaw too), GHOSTPC_SKIP_BRIEFING,
+  GHOSTPC_LOG_POS, GHOSTPC_CALLDOWN_TEST; the 1_2_1 gate trigger: warp to -77.79 -145.22 14.85 yaw 26 and walk
+  forward; the calldown spot -82.34 -136.41 15.38 yaw 101; aim = one tap of Y (holding it opens the weapon list).
+- Echo's irradiate tested too (GHOSTPC_WARP_SWAP=1: player 2 on the second warp's spot; =2 on both). The other
+  calldowns (Arclite siege-tank strike, Yamato, Comsat, EMP, Nuke, Identify) share the fixed paths (ActivateCalldown,
+  slot 1 GetTarget, slot 4 Update, the two target globals); their strikes (tComsatCalldown / tArcliteCalldown::DoFire,
+  tYamatoCalldown::Explode) spawned in GetFirstLocalPlayer's sector, now the calldown's own player's. Not tried in
+  game (no reachable level).
+- Triggers: ScriptPlayer::GetCurPlayer (player 1) is what ~50 mission scripts compare the triggering actor with
+  (cObjectiveUpdate, cLevelChange, cWeaponEnable, cCalldownToggle, cRegionDamage, cM131_*, cM432_BridgeScene, ...).
+  While scriptMessage_Triggered / Entered / Exited / Touched / Activated (16 call sites) names a local player,
+  GetCurPlayer returns that player. Tested: Echo alone sets off the 1_2_1 gate trigger. Scripts that call
+  GetFirstLocalPlayer directly (cM131_ZerglingPop, cM431 marine spawns, cCueRow, cutscene data) still mean player 1.
+- Script and cutscene moves of player 1 (cCueRow::WarpPlayerIntoPlace / DoPlayerMove, ScriptThing::SetPosition /
+  JumpToThingMatrix -> tThing::JumpToMatrix) take player 2 along, 1 m to her side (gated areas, cutscene starts).
+- Competitive arena (paused): levels/arena/make_arena_map.py -> arena.map (8_1_1a_Protoss_Arena; mirror-symmetric about
+  y = 0, checked by the script; Aiur AR_* textures; spawns in the north/south rooms via player_start / player2_start
+  - player2_start not implemented in levelscript.cpp yet). Still to do: compile script, install, ghostmpcomp.nsc with
+  only arena levels, the competitive menu.
+- To check: triggers (mission scripts, regions) must accept either player, so neither can softlock the other.
+- Ammo between missions: cChronicle::SetPlayerData (health, Psi, every ammo type, powers from the mission's STATS /
+  AMMO lines) runs on a level change only after tSequence::ChangeMission (tSequence +0xD4): a new mission starts with
+  its chronicle loadout, sub-levels keep what the player has. Same in single player: by design.
+- -coop (GhostPC argument, or GHOSTPC_COOP=1): the game starts in co-op (cShell +0x6E34 and the co-op game type set
+  until player 2 exists), e.g. "GhostPC.exe -level 1_2_1_Miners_Bunker -coop". Checked every level's start in co-op
+  (1_3_1b, 1_2_1, 1_2_1a, 1_2_1b, 2_2_2, 2_2_2a; Borgo 1_3_1a and the zoo earlier): player 2 starts 1 m beside
+  player 1 on valid ground in all of them.
+- Test input: GHOSTPC_INPUT entries "<frame>:P2 <control>" press player 2's pad (port 1 is reported then).
+- Aries (cAIBossSniper::FireSniperProjectile -> FireInstantProjectile): 25 damage a shot, now 80 (push at +0x16).
+- Main menu button 0 now reads "Singleplayer" (was MNU_RESUME_CAMPAIGN "Select Profile").
+- Co-op profile menus (fixed): Menu_SelProfileMultiCoop (menu 20) is shown for player 1's pick (mainProfile_pPlayer0
+  unset; State_LoadProfile sets player 0, then player 1) and again for player 2's (player 1's profile greyed). Both had
+  the title MNU_SEL_PROF and "{y} Create New" in both prompt boxes. Now MNU_SEL_PROF_P1 / _P2 (unused strings in
+  game.nls), box 3 "{x} Delete" with X -> delete on player 1's pick, empty on player 2's. Delete from co-op not tried
+  yet (State_DeleteProfile returns to state history slot 3).
+- Co-op missions: IsMissionUnlocked for save slot 1 also asks the other player's profile (a NOVA / NSI profile in
+  either seat unlocks all; other profiles keep their own progress). The co-op mission select itself is as designed.
+- Test switch GHOSTPC_AUTOCOOP=1: drives the menus by the menu shown (intro, title, Down+A on the main menu, A on
+  Multiplayer, profile, missions, difficulty), then A on the finished load screen (state 24) and twice in the level.
+
+## 2026-10-29: Competitive (Protoss arena, Nova vs Echo)
+- Arena: levels/arena (make_arena_map.py -> arena.map; compile_arena.bat / .sh with the OpenNOD SDK; install_arena.py
+  into game/Levels). Fitted textures (make_arena_map.py, Fitted): pillars 4 repeats per 7 m face from the corner and
+  3 up from the floor; corridor walls cut into panels of about 4 m alternating AR_Hall_gld_01 / _02 (the two halves
+  of one arch), each texture filling one panel floor to ceiling (Quake standard projection offsets). Ceiling AR_Pattern_HComb_gld (world brushes can only use Materials\* textures, MaterialDirs.txt;
+  the 3D\Materials AR_CeilingPanel* are model textures).
+- Chronicle: scripts/make_comp_chronicle.py writes Misc/ghostmpcomp.nsc (PROFILEID 2, GAMETYPE 2; one mission
+  8_1_ARENA = 8_1_1a_Protoss_Arena, "Protoss Arena Test", loadscreen and menu image 811a_MenuImage) and the strings
+  8_1_ARENA, 8_1_OBJ00, MNU_SEL_PLAYERS in the three game.nls copies. IsMissionUnlocked: slot 2 unlocks everything.
+- Menus: Competitive (state 0x2B) first rebuilds Menu_Multiplayer as "Number of Players" (2 Players -> 0x2B,
+  4 Players greyed: cShellMenuItem +0x28 = 4, skipped by Select*Button; B -> 0x22). State_SelectProfileComp loads the
+  chronicle only when the previous state is 0x22, which it still is. Menu_SelProfileMultiComp (an older layout) jumps
+  to Menu_SelProfileMultiCoop; Menu_MultiComp gets the co-op list's +0x2C flag and title.
+- Kills: tActor::Kill counts them in multiplayer (killer's cPlayerInfo +0x78; +0x7A also for "special" kills;
+  projectiles credit their owner, GUID at +0x378). Self-kills no longer count (Kill+0x402/+0x40E). Grenade kills
+  count (tested). Spider mines did not: cSpiderMineControl::ExitSpiderMine creates a new "spidermine" thing at the
+  mine and kills it, and its death explosion is the killer, unlinked from the rider (control +0x1A0). That creation
+  (ExitSpiderMine+0x92) is recorded and Kill's killer check (+0x3C8) maps the thing to the rider; a player death that
+  credits nobody is logged ("no kill credited", with the killer's type). Mine kills not tested yet.
+- Match (competitive.cpp): clock from the level load, paused while a shell menu is up; time limit from the settings
+  window ([multiplayer] MatchMinutes, default 10). Timer top centre (red under 30 s), scoreboard while Tab is held
+  or Back (either pad, Backspace; in a match Back is taken from the game, whose controls screen it opened), names from
+  the profiles (cProfile +8). Texts are cUiText objects
+  (0x40 bytes, ctor(text, x, y, ARGB, buffer size)) drawn after vui_Update's RenderAll with a full-screen viewport
+  (d3d_core SetFullScreen2D). At the limit: victory screen (or MATCH OVER on a draw), controls frozen
+  (gameMultiplayer_UpdateControls skipped), 60 s or Space / A, then cShell::MenuOn + state 0x4E = State_Quit (the pause
+  menu's Quit; UpdateState runs only with the shell on, and State_Quit needs its menu object): title screen.
+- Menu image: UI/Materials/811a_MenuImage(L).dds from levels/arena/menu_shot.png (levels/zoo/make_menu_images.py
+  --name 811a_MenuImage, crop 400 160 1600 760). The mission select's info panel (cShellMenuItem::RenderText "!"
+  command -> RenderMissionDesc) draws only the name unless the item is selected (+0x30); in a one-mission list
+  select-next wraps onto the same item and clears it, so the panel was empty: competitive.cpp keeps it selected.
+  Test switches: GHOSTPC_AUTOCOMP=hold (stop at the mission list), GHOSTPC_LOG_MISSIONDESC.
+- Pause menu in a match: Start on either pad opens it (Continue ... Restart, Quit), full screen (tested).
+- Respawns: random "respawn" point, not within 8 m of the other player, nor the point she took in the last 5 s.
+- Tested (scripted): menus into the arena, timer, scoreboard, victory screen, return to the title screen.
+  Not tested: an actual kill (scripted R Trigger did not fire in the arena) and the competitive respawn.
+- Test switches: GHOSTPC_AUTOCOMP=1 (menus into a competitive game), GHOSTPC_MATCH_SECONDS=<n>, GHOSTPC_SHOW_SCORE=1
+  (scoreboard always), GHOSTPC_WARP2_ONLY=1 (the second debug warp moves player 2 alone).

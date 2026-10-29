@@ -17,6 +17,7 @@ int g_verbose;
 static FILE *g_log;
 static CRITICAL_SECTION g_logLock;
 char g_gameDir[MAX_PATH], g_saveDir[MAX_PATH], g_cmdline[1024];
+bool g_coopStart;   // -coop (or GHOSTPC_COOP): the game starts in co-op, e.g. with -level <name>
 uint32_t g_imageBase, g_imageSize;
 const char *volatile g_crumb = "";
 static DWORD g_gameThreadId;
@@ -510,6 +511,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR cmd, int) {
             if (!strcmp(a, "-game") && i + 1 < argc) { WideCharToMultiByte(CP_ACP, 0, argv[++i], -1, g_gameDir, MAX_PATH, 0, 0); continue; }
             if (!strcmp(a, "-v")) { g_verbose = 1; continue; }
             if (!strcmp(a, "-setup")) { forceSetup = true; continue; }
+            if (!strcmp(a, "-coop")) { g_coopStart = true; continue; }   // start the game with two players (shell.cpp)
             if (!pass.empty()) pass += ' ';
             pass += a;
         }

@@ -2,7 +2,8 @@
 1024x512) from an in-game screenshot, in the same format as the originals: DXT1, no mip levels, with the 128-byte
 header copied from 131a_MenuImage(L).dds.
 
-Usage: python make_menu_images.py <screenshot> [x0 y0 x1 y1]   (crop box in screenshot pixels, 2:1)
+Usage: python make_menu_images.py [--name 811a_MenuImage] <screenshot> [x0 y0 x1 y1]   (crop box in screenshot
+pixels, 2:1; --name: another mission's images, e.g. the Protoss arena's 811a_MenuImage)
 """
 import os
 import sys
@@ -58,6 +59,10 @@ def encode_dxt1(img):
 
 
 def main():
+    global NAME
+    if len(sys.argv) > 2 and sys.argv[1] == "--name":
+        NAME = sys.argv[2]
+        del sys.argv[1:3]
     src = Image.open(sys.argv[1]).convert("RGB")
     box = tuple(int(v) for v in sys.argv[2:6]) if len(sys.argv) >= 6 else (420, 250, 1660, 870)
     crop = src.crop(box)

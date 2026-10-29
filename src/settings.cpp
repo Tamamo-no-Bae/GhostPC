@@ -1,7 +1,8 @@
 // Settings window shown before the game starts (resolution, display mode, input device, mouse sensitivity).
-// Values live in ghostpc.ini next to the key bindings: [video], [input] and [launcher].
+// Values live in ghostpc.ini next to the key bindings: [video], [input], [multiplayer] and [launcher].
 #include "settings.h"
 #include <commctrl.h>
+#include <algorithm>
 #include <string>
 #include <vector>
 #pragma comment(lib, "comctl32.lib")
@@ -35,6 +36,7 @@ void SettingsLoad() {
     g_settings.input = !_stricmp(in, "controller") ? IN_CONTROLLER : IN_KBM;
     g_settings.mouseSensitivity = std::max(10, std::min(500, IniInt("input", "MouseSensitivity", 100)));
     g_settings.showAtStartup = IniInt("launcher", "ShowSettings", 1) != 0;
+    g_settings.matchMinutes = std::max(1, std::min(99, IniInt("multiplayer", "MatchMinutes", 10)));
 }
 void SettingsSave() {
     char res[64];
@@ -44,6 +46,7 @@ void SettingsSave() {
     IniPut("video", "VSync", g_settings.vsync ? 1 : 0);
     IniPut("input", "InputDevice", g_settings.input == IN_CONTROLLER ? "controller" : "keyboardmouse");
     IniPut("input", "MouseSensitivity", g_settings.mouseSensitivity);
+    IniPut("multiplayer", "MatchMinutes", g_settings.matchMinutes);
     IniPut("launcher", "ShowSettings", g_settings.showAtStartup ? 1 : 0);
 }
 
@@ -56,7 +59,9 @@ static const Res kRes[] = {
     {1280, 720, "16:9"}, {1366, 768, "16:9"}, {1600, 900, "16:9"}, {1920, 1080, "16:9"}, {2560, 1440, "16:9"},
     {3840, 2160, "16:9"}, {1920, 1200, "16:10"}, {2560, 1600, "16:10"},
 };
-enum { ID_RES = 100, ID_WIN, ID_FULL, ID_BORDER, ID_KBM, ID_PAD, ID_SENS, ID_SENSVAL, ID_VSYNC, ID_SHOW, ID_PLAY, ID_QUIT, ID_INFO };
+enum { ID_RES = 100, ID_WIN, ID_FULL, ID_BORDER, ID_KBM, ID_PAD, ID_SENS, ID_SENSVAL, ID_VSYNC, ID_SHOW, ID_PLAY, ID_QUIT, ID_INFO, ID_MATCH };
+static const int kMatchMinutes[] = {3, 5, 10, 15, 20, 30};
+static std::vector<int> g_matchList;
 static HFONT g_font, g_bold;
 static int g_result = -1;
 static std::vector<Res> g_resList;
@@ -95,6 +100,8 @@ static LRESULT CALLBACK DlgProc(HWND h, UINT m, WPARAM w, LPARAM l) {
             g_settings.mouseSensitivity = (int)SendDlgItemMessageA(h, ID_SENS, TBM_GETPOS, 0, 0);
             g_settings.vsync = IsDlgButtonChecked(h, ID_VSYNC) == BST_CHECKED;
             g_settings.showAtStartup = IsDlgButtonChecked(h, ID_SHOW) == BST_CHECKED;
+            int m = (int)SendDlgItemMessageA(h, ID_MATCH, CB_GETCURSEL, 0, 0);
+            if (m >= 0 && m < (int)g_matchList.size()) g_settings.matchMinutes = g_matchList[m];
             g_result = 1;
             DestroyWindow(h);
             return 0;
@@ -134,7 +141,7 @@ bool SettingsDialog() {
     wc.hbrBackground = GetSysColorBrush(COLOR_WINDOW);
     wc.lpszClassName = "GhostPCSettings";
     RegisterClassA(&wc);
-    const int W = 420, H = 430;
+    const int W = 420, H = 490;
     RECT r = {0, 0, W, H};
     DWORD style = WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
     AdjustWindowRect(&r, style, FALSE);
@@ -189,7 +196,21 @@ bool SettingsDialog() {
     Ctl(h, "STATIC", "", 0, 346, y + 4, 50, 20, ID_SENSVAL);
     y += 34;
     Ctl(h, "STATIC", "Key bindings: [input] in ghostpc.ini (Cxbx-Reloaded profile syntax).", 0, 28, y, 370, 20, -1);
-    y += 34;
+    y += 30;
+
+    Ctl(h, "STATIC", "Multiplayer", 0, 16, y, 200, 20, -1, g_bold); y += 26;
+    Ctl(h, "STATIC", "Competitive time limit:", 0, 28, y + 3, 140, 20, -1);
+    HWND mc = Ctl(h, "COMBOBOX", "", CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP, 170, y, 120, 200, ID_MATCH);
+    g_matchList.assign(std::begin(kMatchMinutes), std::end(kMatchMinutes));
+    if (std::find(g_matchList.begin(), g_matchList.end(), g_settings.matchMinutes) == g_matchList.end())
+        g_matchList.push_back(g_settings.matchMinutes);   // custom value from the ini
+    for (int i = 0; i < (int)g_matchList.size(); i++) {
+        char b[32];
+        sprintf(b, "%d minutes", g_matchList[i]);
+        SendMessageA(mc, CB_ADDSTRING, 0, (LPARAM)b);
+        if (g_matchList[i] == g_settings.matchMinutes) SendMessageA(mc, CB_SETCURSEL, i, 0);
+    }
+    y += 40;
 
     Ctl(h, "BUTTON", "Show this window at startup (hold Shift while launching to get it back)", BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP, 16, y, 388, 36, ID_SHOW);
     CheckDlgButton(h, ID_SHOW, g_settings.showAtStartup ? BST_CHECKED : BST_UNCHECKED);
