@@ -15,3 +15,4 @@ respawn 14 -15 -0.3 43.0251
 respawn -14 15 -0.3 223.025
 respawn -14 -15 -0.3 316.975
 respawn 14 0 -0.3 90
+noweapon flamethrower

@@ -1,6 +1,6 @@
 """Installs the compiled Protoss arena (levels/arena/out) into game/Levels with the Zoo's post-compile patches
 (levels/zoo/install_zoo.py): Havok world bounds with 100 m of margin, the .nsd trailer's environment fields from an
-original level and its sky names. The arena has a ceiling everywhere, so there is no sky placeholder to rename.
+original level. The arena has a ceiling everywhere, so it has no sky.
 Also copies the GhostPC level script (spawns, respawn points) and the effect list.
 """
 import os
@@ -23,7 +23,7 @@ def main():
         raise SystemExit("missing compiler output (run compile_arena.bat first): " + ", ".join(missing))
     nil, old_b, new_b = z.patch_bounds(open(files[".nil"], "rb").read(), 100.0)
     print("physics bounds %s -> %s" % ([round(v, 1) for v in old_b], [round(v, 1) for v in new_b]))
-    nsd = z.patch_nsd(z.patch_nsd_environment(open(files[".nsd"], "rb").read()), z.SKY_MODEL)
+    nsd = z.patch_nsd_environment(open(files[".nsd"], "rb").read())   # indoor: no sky
     open(os.path.join(z.LEVELS, NAME + ".nil"), "wb").write(nil)
     open(os.path.join(z.LEVELS, NAME + ".nsd"), "wb").write(nsd)
     shutil.copyfile(files[".npd"], os.path.join(z.LEVELS, NAME + ".npd"))

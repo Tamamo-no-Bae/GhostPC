@@ -112,6 +112,7 @@ static void DebugShadowLight() {
     if (g_frame % 300 == 0) { float *pos = (float *)(p + 0xb0); Log("player pos frame %u: %.1f %.1f %.1f", g_frame, pos[0], pos[1], pos[2]); }
     static uint8_t *last;
     uint8_t *l = *(uint8_t **)(p + 0x2dc);
+    if (l && IsBadReadPtr(l, 0x2c)) l = nullptr;   // (a thing the game has not gathered lights for yet: 0xCCCCCCCC)
     if (l == last) return;
     last = l;
     extern UINT g_frame;
@@ -159,10 +160,10 @@ static void DebugEarlyPlayerPos() {
 }
 
 // called once per frame (from Swap, on the game thread)
-// The Enemy Zoo is open to every profile. cProfile::IsMissionUnlocked(mission, chronicle) unlocks every mission for
+// The Enemy Zoo and the vehicle test map are open to every profile. cProfile::IsMissionUnlocked(mission, chronicle) unlocks every mission for
 // profiles named "NSI" or "NOVA" (case-insensitive) or while mainProfile_bUnlockCheat is set (a command-line switch /
-// the unlock-all console command); other profiles see only what they reached in play. The detour adds the zoo
-// (mission ID 9_1_ZOO: gameChronicle +0x8 count, +0xC mission pointers, ID at +0x00; cChronicle::FindMission matches
+// the unlock-all console command); other profiles see only what they reached in play. The detour adds the test maps
+// (mission IDs 9_1_ZOO, 9_2_VEHICLES: gameChronicle +0x8 count, +0xC mission pointers, ID at +0x00; cChronicle::FindMission matches
 // the level name at +0x20) to what every profile sees; the rest stays as it was.
 typedef int(__thiscall *UnlockedFn)(void *, unsigned, unsigned);
 static uint8_t *g_unlockedTramp;
@@ -179,7 +180,7 @@ static int __fastcall IsMissionUnlocked(void *profile, void *, unsigned mission,
     static uint8_t *chron = (uint8_t *)SymAddr("?gameChronicle@@3VcChronicle@@A");
     if (!chron || mission >= *(unsigned *)(chron + 8)) return 0;
     const char *id = *(const char **)(chron + 0xc + 4 * mission);
-    return id && !_stricmp(id, "9_1_ZOO");
+    return id && (!_stricmp(id, "9_1_ZOO") || !_stricmp(id, "9_2_VEHICLES"));
 }
 static void HookMissionUnlock() {
     static bool done;
@@ -1310,17 +1311,23 @@ void ShellWatch() {
     HookCoopMenu();
     extern void CompetitiveInit();
     CompetitiveInit();
+    extern void VehiclesInit();
+    VehiclesInit();
     DebugTestUnlock();
     extern void DebugDeathInstall();
     DebugDeathInstall();
     extern void CustomSoundInstall();
     CustomSoundInstall();
+    extern void CustomSoundUpdate();
+    CustomSoundUpdate();
     DebugEarlyPlayerPos();
     extern void LevelScriptUpdate();
     LevelScriptUpdate();
     g_crumb = "competitive: match";
     extern void CompetitiveUpdate();
     CompetitiveUpdate();
+    extern void VehiclesUpdate();
+    VehiclesUpdate();
     g_crumb = "shell: debug";
     {   // debug (GHOSTPC_TEST_P2=<frame>): the console's "new player" (CmdNewPlayer: a second local player and the
         // left/right split screen), to look at the cut split-screen mode
@@ -1384,7 +1391,8 @@ void ShellWatch() {
         static bool comp = getenv("GHOSTPC_AUTOCOMP") != nullptr;
         static bool on = comp || getenv("GHOSTPC_AUTOCOOP") != nullptr;
         static bool holdMissions = comp && !_stricmp(getenv("GHOSTPC_AUTOCOMP"), "hold");   // =hold: stop at the missions
-        static DWORD downs = getenv("GHOSTPC_AUTOCOOP") ? atoi(getenv("GHOSTPC_AUTOCOOP")) - 1 : 0;   // =n: mission n
+        static DWORD downs = getenv("GHOSTPC_AUTOCOOP") ? atoi(getenv("GHOSTPC_AUTOCOOP")) - 1   // =n: mission n
+                           : comp && atoi(getenv("GHOSTPC_AUTOCOMP")) > 1 ? atoi(getenv("GHOSTPC_AUTOCOMP")) - 1 : 0;   // (AUTOCOMP=n too)
         static DWORD menu = ~0u, since, pressed, presses, joined, starts;
         uint32_t names = SymAddr("?gameMotion_apNames@@3PAPADA");
         if (on && !joined && names && *(void **)(names + 0x72c)) joined = g_frame;
@@ -1405,6 +1413,7 @@ void ShellWatch() {
                 pressed = g_frame;
                 if (menu == 0 || menu == 15) PressStart();
                 else if (menu == 14 || (comp && menu == 28)) presses++ ? PressA() : PressDown();
+                else if (menu == 32 && !holdMissions && presses < downs) presses++, PressDown();
                 else if (menu == (28 | 0x100) || menu == 21 || (menu == 32 && !holdMissions)) PressA();
                 else if (menu == 31 && presses < downs) presses++, PressDown();
                 else if (menu == 28 || menu == 20 || menu == 31 || menu == 18) PressA();

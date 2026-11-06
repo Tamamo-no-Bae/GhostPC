@@ -3,7 +3,7 @@ rem Compiles zoo.map with the OpenNOD SDK into levels\zoo\out\9_1_1a_Enemy_Zoo.{
 rem Logs go to out\*.log. Nothing is copied into the game folder.
 setlocal
 cd /d "%~dp0"
-set "SDK=C:\Users\Tamamo\AppData\Local\Temp\claude\C--Users-Tamamo-Documents-Claude-Work-SCGhost\3f842a37-afa2-462a-9484-fdfdacea9732\scratchpad\sdk\opennod\OpenNOD-SDK-0.6.7-windows-x64"
+set "SDK=%~dp0..\sdk"
 if not "%NOD_SDK_DIR%"=="" set "SDK=%NOD_SDK_DIR%"
 for %%I in ("%~dp0..\..\game") do set "ASSETS=%%~fI"
 set "HERE=%~dp0"

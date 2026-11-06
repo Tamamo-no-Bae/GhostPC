@@ -135,6 +135,10 @@ void DebugDeathInstall() {
     for (int i = 0; i < (int)(sizeof g_det / sizeof g_det[0]); i++) {
         uint8_t *fn = (uint8_t *)SymAddr(g_det[i].name);
         if (!fn) { Log("death-dbg: %s not found", g_det[i].name); continue; }
+        if (fn[0] == 0xE9) {   // already detoured (vehicles.cpp: tActor::Damage for the shields): its jmp cannot be copied
+            Log("death-dbg: %s already detoured, not logged", g_det[i].name);
+            continue;
+        }
         uint8_t *t = (uint8_t *)VirtualAlloc(nullptr, 32, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
         memcpy(t, fn, g_det[i].stolen);
         t[g_det[i].stolen] = 0xE9;

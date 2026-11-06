@@ -4,7 +4,7 @@
 # Then: python install_arena.py
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
-SDK="${NOD_SDK_DIR:-/c/Users/Tamamo/AppData/Local/Temp/claude/C--Users-Tamamo-Documents-Claude-Work-SCGhost/3f842a37-afa2-462a-9484-fdfdacea9732/scratchpad/sdk/opennod/OpenNOD-SDK-0.6.7-windows-x64}"   # as compile_zoo.bat; NOD_SDK_DIR overrides
+SDK="${NOD_SDK_DIR:-$HERE/../sdk}"   # levels/sdk (OpenNOD SDK 0.6.8); NOD_SDK_DIR overrides
 ASSETS="$(cd "${GHOST_GAME_DIR:-$HERE/../../game}" && pwd)"
 MAP="$HERE/arena.map"
 OUT="$HERE/out"

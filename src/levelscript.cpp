@@ -8,6 +8,9 @@
 //   unpin <ai class>
 //   sunken_los
 //   fly_path <ai class> <track> [speed]
+//   inventory <item> <count>
+//   weapon <weapon> [ammo]
+//   dormant <x0> <y0> <z0> <x1> <y1> <z1> <ai class>
 //
 // When the player enters the box, or as soon as an actor whose AI is <ai class> has been damaged (shot from outside the
 // box), cAIInstance::ScriptNotify(message, 0, 0, 0, 0, 0) is sent to every actor whose AI is <ai class> -- what a mission script does to start a boss (cAIBossTanagazj: 101 = phase 1, which also
@@ -23,6 +26,11 @@
 // units' fire hits them (the Scout kept cycling the Reaver out of its stand pose). cAIDemoAnims::Damaged (vtable
 // +0x190) is wrapped while a level asks for it.
 //
+// dormant: actors whose AI is <ai class> do nothing (cAIInstance::Update, their AI's whole tick, is skipped: no
+// awareness, no state machine, no movement; they stand in their placed pose) until a player (either, in co-op) enters
+// the box or one of them is damaged; then they wake for the rest of the level (user: the Hauler and the Ultralisk
+// came for Nova before she reached their rooms).
+//
 // unpin: releases actors whose AI is <ai class> (tThing::SetPinned(0)) 30 frames after the level loads. The Ultralisk
 // boss pins itself in InitInstance and never unpins (its mission script must have); pinned, it still walks, but its
 // charge steers its physics velocity (SteerVelocity), which a pinned body ignores, so it froze in the charge.
@@ -36,6 +44,20 @@
 // level loads, what a mission script's ScriptActor::AIPlayPath does: cAIBaseFlyer::StartPathMove(track, 0, speed) plays
 // the .nad track 3D\Anims\<track>.nad (world coordinates, turned by the actor's facing) as its movement and puts it in
 // its follow-path state, the only one the Mutalisk attacks from. A path whose last key matches its first loops.
+//
+// inventory: gives every local player <count> of an item 10 frames after the level loads (tPlayer::SetPlayerItemAmount),
+// what a mission's INVENTORY line does (the test levels have no mission). Items are the INVENTORY tokens
+// (cMission::InventoryTokensToItemCount, ePlayerItems): canister 0, smokegrenade 1, stickygrenade 2, hellfiregrenade 3
+// (the game's own token is spelled "hellfiregreande"; both work), spidermine 4, firefly 5, mantis 6.
+//
+// weapon: makes one of the player's weapons selectable and fills its ammo, 10 frames after the level loads.
+// psiblade_start: every player gets the Psi Blade at the start and keeps it through deaths (psiblade.cpp; the Psi
+// Blade arena, with noweapon for the guns).
+// noweapon <weapon>: hides one instead (the Zoo's flamethrower until its pickup, powFlamethrower: vehicles.cpp).
+// tPlayer::CreateAllPlayerWeapons makes every weapon (tPlayer +0x460[weapon]: 1 shockglove, 2 pistol, 3 gauss,
+// 4 flamethrower, 5 / 6); one whose tPlayerWeapon +0x5F has bit 1 set is skipped when cycling (GetNext /
+// GetPrevPlayerWeapon) - ScriptPlayer::EnablePlayerWeapon clears it, as done here. Its ammo type is +0x44 (the
+// flamethrower's 3; tPlayer::SetAmmo). Debug: GHOSTPC_WEAPON=<n> also selects weapon n then (SetPlayerWeapon).
 //
 // player_start: the game creates the player at the world origin; this moves her there 5 frames after the level loads,
 // so a level can use its origin for something else (the zoo's sniper arena: his animations are in world coordinates).
@@ -59,18 +81,28 @@ struct Notify {
     bool fired;
 };
 std::vector<Notify> g_cmds;
+struct Dormant {
+    float lo[3], hi[3];
+    std::string cls;
+    uint32_t vtable;
+    bool awake;
+};
+std::vector<Dormant> g_dormant;
 uint8_t *g_loadedWorld;
 UINT g_loadFrame;
 unsigned g_propsMode;     // props_start motion mode (0 = none / applied)
 std::vector<uint8_t *> g_propsDone;   // props already restarted (StartProps)
 bool g_propsPlayerOnly;   // props_player_only: props cycle only when the player damages them
 static bool g_sunkenLOS;   // sunken_los
+static bool g_psibladeStart;   // psiblade_start
 std::vector<std::string> g_unpin;   // unpin <ai class>: actors to release after the level loads
 struct FlyPath {
     std::string cls, track;
     float speed;
 };
 static std::vector<FlyPath> g_flyPaths;   // fly_path
+static std::vector<std::pair<int, unsigned>> g_inventory;   // inventory <item> <count>
+static std::vector<std::pair<int, int>> g_weapons;          // weapon <weapon> [ammo] (-1: leave it)
 float g_start[4];         // player_start x y z yaw
 bool g_hasStart;
 float g_start2[4];        // player2_start x y z yaw: player 2's start (else 1 m beside player 1)
@@ -92,12 +124,16 @@ uint8_t *CurrentWorld() {
 
 void Load(const char *level) {
     g_cmds.clear();
+    g_dormant.clear();
     g_propsMode = 0;
     g_propsDone.clear();
     g_propsPlayerOnly = false;
     g_sunkenLOS = false;
+    g_psibladeStart = false;
     g_unpin.clear();
     g_flyPaths.clear();
+    g_inventory.clear();
+    g_weapons.clear();
     g_hasStart = g_hasStart2 = false;
     g_respawns.clear();
     char path[MAX_PATH];
@@ -130,8 +166,34 @@ void Load(const char *level) {
             g_flyPaths.push_back({cls, track, speed});
             continue;
         }
+        unsigned count = 0;
+        if (sscanf(line, " inventory %127s %u", cls, &count) == 2) {
+            static const char *items[] = {"canister", "smokegrenade", "stickygrenade", "hellfiregrenade", "spidermine", "firefly",
+                                          "mantis"};
+            int item = !_stricmp(cls, "hellfiregreande") ? 3 : -1;
+            for (int i = 0; i < 7 && item < 0; i++)
+                if (!_stricmp(cls, items[i])) item = i;
+            if (item < 0) Log("levelscript: inventory: unknown item %s", cls);
+            else g_inventory.push_back({item, count});
+            continue;
+        }
+        int ammo = -1;
+        bool hide = sscanf(line, " noweapon %127s", cls) == 1;
+        if (hide || sscanf(line, " weapon %127s %d", cls, &ammo) >= 1) {
+            static const char *weapons[] = {"", "shockglove", "pistol", "gauss", "flamethrower"};
+            int w = -1;
+            for (int i = 1; i < 5 && w < 0; i++)
+                if (!_stricmp(cls, weapons[i])) w = i;
+            if (w < 0) Log("levelscript: weapon: unknown weapon %s", cls);
+            else g_weapons.push_back({w, hide ? -2 : ammo});
+            continue;
+        }
         if (sscanf(line, " unpin %127s", cls) == 1) {
             g_unpin.push_back(cls);
+            continue;
+        }
+        if (!strncmp(line + strspn(line, " 	"), "psiblade_start", 14)) {
+            g_psibladeStart = true;
             continue;
         }
         if (!strncmp(line + strspn(line, " 	"), "sunken_los", 10)) {
@@ -147,6 +209,14 @@ void Load(const char *level) {
             auto match = (MatchFn)SymAddr("?gameMotion_MatchMode@@YA?AW4eMotionMode@@PBD@Z");
             g_propsMode = match ? match(cls) : 0;
             if (!g_propsMode) Log("levelscript: props_start: unknown motion mode %s", cls);
+            continue;
+        }
+        Dormant dm = {};
+        if (sscanf(line, " dormant %f %f %f %f %f %f %127s", &dm.lo[0], &dm.lo[1], &dm.lo[2], &dm.hi[0], &dm.hi[1], &dm.hi[2], cls) == 7) {
+            dm.cls = cls;
+            dm.vtable = SymAddr(("??_7" + dm.cls + "@@6B@").c_str());
+            if (!dm.vtable) Log("levelscript: dormant: unknown AI class %s", cls);
+            else g_dormant.push_back(dm);
             continue;
         }
         if (sscanf(line, " notify %f %f %f %f %f %f %127s %u", &n.lo[0], &n.lo[1], &n.lo[2], &n.hi[0], &n.hi[1], &n.hi[2],
@@ -378,6 +448,8 @@ static void FixDetectorClass() {
 static char g_worldName[MAX_PATH];
 static uint8_t *g_loadWorldTramp;
 static UINT g_worldLoads;   // counts gameWorld_LoadWorld calls: a restart can reuse the same tWorld object
+UINT LevelLoadCount() { return g_worldLoads; }
+bool LevelPsiBladeStart() { return g_psibladeStart; }   // (psiblade.cpp: both players start with the blade and keep it)   // (psiblade.cpp: loads and restarts take the Psi Blade away)
 static void __cdecl RecordWorldName(const char *name) {
     if (!name) return;
     const char *base = name;
@@ -643,6 +715,240 @@ static void PlayFoley(void *obj, const char *mode, void *at = nullptr) {
     int m = obj && play && match ? match(mode) : -1;
     if (m >= 0) play(obj, m, at, nullptr, 0, 1.f, nullptr);
 }
+// Lockdown on the Siege Tank and the Vulture (user): cPlayerControl::TargetSelectLockdown only takes things with
+// tThing +0x44 bit 3 (the template's thingflags 8: the Scout's and Observer's have it; siegeTank_baseClass has 0x800000
+// only, TerranVulture none), so neither could be targeted. LockdownFlags gives every Siege Tank and Vulture AI's thing
+// that bit as it appears. The tank's own Lockdown / UnLockdown (model frozen, state 54, stand controller) then work;
+// the Vulture's are cAIInstance's empty stub, so it gets its own like the tank's: model frozen (cModelInst +0x14 bit
+// 0x20000), velocity zeroed, lockdown state (54); UnLockdown unfreezes it and puts it back to idle (2), from which it
+// searches again.
+static void __fastcall VultureLockdown(uint8_t *ai) {
+    typedef void(__thiscall *IntFn)(void *, int);
+    static auto zero = (void(__thiscall *)(void *))SymAddr("?ZeroVelocity@tThing@@QAEXXZ");
+    uint8_t *thing = *(uint8_t **)(ai + 8);
+    if (thing) {
+        if (uint8_t *model = *(uint8_t **)(thing + 0x2a0)) *(uint32_t *)(model + 0x14) |= 0x20000;
+        if (zero) zero(thing);
+    }
+    if (*(int *)(ai + 0x18) != 0x36) ((IntFn)(*(uint32_t **)ai)[0x5b0 / 4])(ai, 0x36);
+    Log("levelscript: vulture %p locked down", ai);
+}
+static void __fastcall VultureUnLockdown(uint8_t *ai) {
+    typedef void(__thiscall *IntFn)(void *, int);
+    uint8_t *thing = *(uint8_t **)(ai + 8);
+    if (thing)
+        if (uint8_t *model = *(uint8_t **)(thing + 0x2a0)) *(uint32_t *)(model + 0x14) &= ~0x20000u;
+    int st = *(int *)(ai + 0x18);
+    if (st != 0x30 && st != 2) ((IntFn)(*(uint32_t **)ai)[0x5b0 / 4])(ai, 2);   // (0x30: dead)
+    Log("levelscript: vulture %p released", ai);
+}
+static void FixVehicleLockdown() {
+    uint32_t *v = (uint32_t *)SymAddr("??_7cAITerranVulture@@6B@");
+    uint32_t stub = SymAddr("?Lockdown@cAIInstance@@UAEXXZ"), unstub = SymAddr("?UnLockdown@cAIInstance@@UAEXXZ");
+    if (v && stub && v[0x1a4 / 4] == stub && v[0x1a8 / 4] == unstub) {
+        uint32_t lock = (uint32_t)VultureLockdown, unlock = (uint32_t)VultureUnLockdown;
+        WriteCode(&v[0x1a4 / 4], &lock, 4);
+        WriteCode(&v[0x1a8 / 4], &unlock, 4);
+    } else
+        Log("levelscript: unexpected cAITerranVulture vtable, no lockdown for it");
+}
+static void LockdownFlags() {
+    static unsigned *nextGuid = (unsigned *)SymAddr("?nextGUID@tThing@@2IA");
+    static auto findT = (uint8_t *(__cdecl *)(unsigned))SymAddr("?gameThing_FindGUID@@YAPAVtThing@@I@Z");
+    static uint32_t tank = SymAddr("??_7cAITerranSiegeTank@@6B@"), vulture = SymAddr("??_7cAITerranVulture@@6B@");
+    static unsigned scanned;
+    if (!nextGuid || !findT) return;
+    if (*nextGuid < scanned) scanned = 0;   // (a new level)
+    // (new things each frame; and every 2 s all again, for AIs given out after their thing appeared)
+    if (g_frame % 120 == 0) scanned = 0;
+    for (; scanned < *nextGuid; scanned++) {
+        uint8_t *t = findT(scanned);
+        if (!t || *(int *)(t + 0x10) != 0) continue;
+        uint8_t *ai = *(uint8_t **)(t + 0x3c4);
+        if (!ai || IsBadReadPtr(ai, 4)) continue;
+        uint32_t vt = *(uint32_t *)ai;
+        if ((vt == tank || vt == vulture) && !(*(uint32_t *)(t + 0x44) & 8)) {
+            *(uint32_t *)(t + 0x44) |= 8;
+            Log("levelscript: %.24s can be locked down", (char *)(t + 0xc4));
+        }
+    }
+}
+// dormant: cAIInstance::Update (test byte ptr [aiMain_flags], 8; push esi: 8 bytes, the absolute address relocated
+// already) is detoured; a dormant class's instances skip it
+typedef void(__thiscall *AIUpdateFn)(uint8_t *);
+static AIUpdateFn g_aiUpdate;
+static void __fastcall AIUpdateHook(uint8_t *ai) {
+    for (auto &d : g_dormant)
+        if (!d.awake && *(uint32_t *)ai == d.vtable) return;
+    g_aiUpdate(ai);
+}
+static void HookDormant() {
+    uint8_t *f = (uint8_t *)SymAddr("?Update@cAIInstance@@QAEXXZ");
+    if (!f || f[0] != 0xF6 || f[1] != 0x05 || f[6] != 8 || f[7] != 0x56) {
+        Log("levelscript: unexpected cAIInstance::Update, no dormant AIs");
+        return;
+    }
+    uint8_t *t = (uint8_t *)VirtualAlloc(nullptr, 32, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+    memcpy(t, f, 8);
+    t[8] = 0xE9;
+    *(int32_t *)(t + 9) = (int32_t)((f + 8) - (t + 13));
+    g_aiUpdate = (AIUpdateFn)t;
+    uint8_t jmp[5] = {0xE9};
+    *(int32_t *)(jmp + 1) = (int32_t)((uint8_t *)AIUpdateHook - (f + 5));
+    WriteCode(f, jmp, 5);
+}
+static void WakeDormant(uint8_t *world) {
+    uint32_t names = SymAddr("?gameMotion_apNames@@3PAPADA");
+    for (auto &d : g_dormant) {
+        if (d.awake) continue;
+        const char *why = nullptr;
+        for (int side = 0; side < 2 && !why && names; side++) {
+            uint8_t **info = *(uint8_t ***)(names + (side ? 0x72c : 0x728));
+            const float *q = info && info[0] ? (const float *)(info[0] + 0xb0) : nullptr;
+            if (q && q[0] >= d.lo[0] && q[0] <= d.hi[0] && q[1] >= d.lo[1] && q[1] <= d.hi[1] && q[2] >= d.lo[2] && q[2] <= d.hi[2])
+                why = side ? "player 2 entered its room" : "player 1 entered its room";
+        }
+        if (!why && world && AnyDamaged(world, d.vtable)) why = "it was damaged";
+        if (why) d.awake = true, Log("levelscript: %s wakes: %s", d.cls.c_str(), why);
+    }
+}
+// No irradiate on the Spore and Sunken Colonies (user: irradiate cannot target buildings; the colonies have their own
+// Arclite and Yamato variants, the only damage their AIs take: cAIZerg*Colony::Damaged passes source 5 Yamato and 7
+// Arclite, nothing else). They have tActor's "can be irradiated" flag (+0x360 bit 3) like any Zerg, so the calldown
+// targeted them (cPlayerControl::ActivateCalldown and tThing::DrawCallout ask tActor::CanIrradiate) and the irradiate
+// effect was put on them, its 2000 damage then ignored. tActor::CanIrradiate (mov eax, [ecx + 0x360]: 6 bytes) and
+// cEffectManager::IrradiateThing (push edi; mov edi, [esp + 8]: 5 bytes; the calldown's hit and the effect's spread)
+// are detoured to refuse an actor whose AI is a colony's.
+static bool IsColony(uint8_t *t) {
+    static uint32_t spore = SymAddr("??_7cAIZergSporeColony@@6B@"), sunken = SymAddr("??_7cAIZergSunkenColony@@6B@");
+    if (!t || IsBadReadPtr(t, 0x3c8) || *(int *)(t + 0x10) != 0) return false;
+    uint8_t *ai = *(uint8_t **)(t + 0x3c4);
+    if (!ai || IsBadReadPtr(ai, 4)) return false;
+    uint32_t vt = *(uint32_t *)ai;
+    return vt && (vt == spore || vt == sunken);
+}
+typedef int(__thiscall *CanIrradiateFn)(uint8_t *);
+static CanIrradiateFn g_canIrradiate;
+static int __fastcall CanIrradiateHook(uint8_t *actor) { return IsColony(actor) ? 0 : g_canIrradiate(actor); }
+typedef void(__thiscall *IrradiateThingFn)(void *, uint8_t *, float);
+static IrradiateThingFn g_irradiateThing;
+static void __fastcall IrradiateThingHook(void *mgr, void *, uint8_t *thing, float t) {
+    if (IsColony(thing)) return;
+    g_irradiateThing(mgr, thing, t);
+}
+static void *DetourBytes(const char *name, const uint8_t *expect, size_t n, void *hook) {
+    uint8_t *f = (uint8_t *)SymAddr(name);
+    if (!f || memcmp(f, expect, n)) {
+        Log("levelscript: unexpected %.50s, not hooked", name);
+        return nullptr;
+    }
+    uint8_t *t = (uint8_t *)VirtualAlloc(nullptr, 32, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+    memcpy(t, f, n);
+    t[n] = 0xE9;
+    *(int32_t *)(t + n + 1) = (int32_t)((f + n) - (t + n + 5));
+    uint8_t jmp[5] = {0xE9};
+    *(int32_t *)(jmp + 1) = (int32_t)((uint8_t *)hook - (f + 5));
+    WriteCode(f, jmp, 5);
+    return t;
+}
+static void NoColonyIrradiate() {
+    static const uint8_t can[] = {0x8B, 0x81, 0x60, 0x03, 0x00, 0x00}, irr[] = {0x57, 0x8B, 0x7C, 0x24, 0x08};
+    g_canIrradiate = (CanIrradiateFn)DetourBytes("?CanIrradiate@tActor@@QAEHXZ", can, 6, (void *)CanIrradiateHook);
+    g_irradiateThing = (IrradiateThingFn)DetourBytes("?IrradiateThing@cEffectManager@@QAEXPAVtThing@@M@Z", irr, 5, (void *)IrradiateThingHook);
+}
+
+// The Firefly's silent kill (user: it must not kill bosses, buildings, cutscene units, flying units, or large enclosed
+// machines such as Siege Tanks, Dragoons and Goliaths). cFireflyControl::DoSilentKill takes the closest actor within
+// 3 m that lacks tActor +0x360 bit 17 and calls tActor::Kill on it (source 1, 100) -- an instant death whatever its
+// health -- then ApplyBlastPhysicsObjects(its position, 10, 300). Both calls are redirected and the target sorted by
+// its AI class:
+//   - a cutscene actor (no AI, or cAIDemoAnims): untouched;
+//   - a boss, building, flyer or large machine (FIREFLY_IMMUNE): FIREFLY_DAMAGE through tActor::Damage instead (so
+//     armour, shields and GhostPC's damage hook apply as to any hit), and no blast;
+//   - anything else (infantry, Zerglings, Hydralisks...): killed as before.
+static const float FIREFLY_DAMAGE = 100.f;
+static const char *const FIREFLY_IMMUNE[] = {
+    // bosses
+    "cAIBossLurker", "cAIBossUltralisk", "cAIBossHauler", "cAIBossSniper", "cAIBossBrain", "cAIBossGoliath",
+    "cAIBossTanagazj", "cAIBaseBossBrain", "cAIBaseBossGoliath", "cAITerranGoliathBoss",
+    // buildings, turrets and fixtures
+    "cAIProtossCannon", "cAIProtossCrystal", "cAIProtossPylon", "cAIProtossShieldBattery", "cAIPsiDampener",
+    "cAIZergSporeColony", "cAIZergSunkenColony", "cAIZergSpore", "cAIZergPustule", "cAIZergEgg", "cAIZergLurkerTurret",
+    "cAITerranFlameTurret", "cAITerranGaussTurret", "cAITurret", "cAITurretScan", "cAITurretSentry", "cAITurretWall",
+    "cAIBaseFloorGun", "cAISearchlight", "cAICamera", "cAIDetector", "cAIDoorScan", "cAIGhostScan",
+    // flyers
+    "cAIBaseFlyer", "cAIProtossScout", "cAIProtossObserver", "cAITerranScienceVessel", "cAIZergMutalisk",
+    "cAIZergOverlord", "cAIZergScourge", "cAIFlightPath",
+    // large enclosed machines
+    "cAITerranSiegeTank", "cAIProtossDragoon", "cAITerranGoliath", "cAIProtossPurifier", "cAIBaseVehicle",
+    "cAITerranSCV", "cAITerranSCV121",
+};
+enum FireflyRule { FF_KILL, FF_DAMAGE, FF_NONE };
+static FireflyRule FireflyRuleOf(uint8_t *t, const char **cls) {
+    static uint32_t vts[sizeof FIREFLY_IMMUNE / sizeof *FIREFLY_IMMUNE], demo;
+    static bool init;
+    if (!init) {
+        init = true;
+        char sym[96];
+        for (size_t i = 0; i < sizeof vts / sizeof *vts; i++) {
+            _snprintf(sym, sizeof sym, "??_7%s@@6B@", FIREFLY_IMMUNE[i]);
+            if (!(vts[i] = SymAddr(sym))) Log("levelscript: Firefly: no vtable for %s", FIREFLY_IMMUNE[i]);
+        }
+        demo = SymAddr("??_7cAIDemoAnims@@6B@");
+    }
+    *cls = "?";
+    if (!t || IsBadReadPtr(t, 0x3c8) || *(int *)(t + 0x10) != 0) return FF_KILL;   // (not an AI actor: as before)
+    uint8_t *ai = *(uint8_t **)(t + 0x3c4);
+    if (!ai || IsBadReadPtr(ai, 4)) return *cls = "no AI", FF_NONE;   // a cutscene actor
+    uint32_t vt = *(uint32_t *)ai;
+    if (vt == demo) return *cls = "cAIDemoAnims", FF_NONE;
+    for (size_t i = 0; i < sizeof vts / sizeof *vts; i++)
+        if (vts[i] && vt == vts[i]) return *cls = FIREFLY_IMMUNE[i], FF_DAMAGE;
+    return FF_KILL;
+}
+static bool g_fireflyBoss;   // (the last DoSilentKill target was not killed: its blast is skipped)
+static int __fastcall FireflyKill(uint8_t *actor, void *, uint8_t *src, int source, int type, float amount, float *pos,
+                                  float *dir, unsigned u, int region, float f) {
+    typedef float(__thiscall *DamageFn)(uint8_t *, uint8_t *, int, int, float, float *, float *, unsigned, int, float, int *);
+    typedef int(__thiscall *KillFn)(uint8_t *, uint8_t *, int, int, float, float *, float *, unsigned, int, float);
+    static auto damage = (DamageFn)SymAddr(
+        "?Damage@tActor@@QAEMPAVtThing@@W4eDamageSource@@W4eDamageType@@MPAUXGVECTOR3@@3IW4eHitRegionType@@MPAH@Z");
+    static auto kill = (KillFn)SymAddr(
+        "?Kill@tActor@@QAEHPAVtThing@@W4eDamageSource@@W4eDamageType@@MPAUXGVECTOR3@@3IW4eHitRegionType@@M@Z");
+    const char *cls;
+    FireflyRule rule = FireflyRuleOf(actor, &cls);
+    g_fireflyBoss = rule != FF_KILL;
+    if (rule == FF_KILL || (rule == FF_DAMAGE && !damage)) {
+        g_fireflyBoss = false;
+        return kill(actor, src, source, type, amount, pos, dir, u, region, f);
+    }
+    if (rule == FF_NONE) {
+        Log("levelscript: Firefly on %.32s (%s, a cutscene actor): no effect", (char *)(actor + 0xc4), cls);
+        return 0;
+    }
+    float dealt = damage(actor, src, source, type, FIREFLY_DAMAGE, pos, dir, 0, region, f, nullptr);
+    Log("levelscript: Firefly on %.32s (%s): %.0f damage instead of a kill (dealt %.1f)", (char *)(actor + 0xc4), cls,
+        FIREFLY_DAMAGE, dealt);
+    return 0;
+}
+static void __fastcall FireflyBlast(uint8_t *thing, void *, float *at, float a, float b) {
+    typedef void(__thiscall *BlastFn)(uint8_t *, float *, float, float);
+    static auto blast = (BlastFn)SymAddr("?ApplyBlastPhysicsObjects@tThing@@QAEXPBUXGVECTOR3@@MM@Z");
+    if (!g_fireflyBoss && blast) blast(thing, at, a, b);
+}
+static void FireflyNoBossKill() {
+    uint8_t *fn = (uint8_t *)SymAddr("?DoSilentKill@cFireflyControl@@AAEXXZ");
+    uint32_t kill = SymAddr("?Kill@tActor@@QAEHPAVtThing@@W4eDamageSource@@W4eDamageType@@MPAUXGVECTOR3@@3IW4eHitRegionType@@M@Z"),
+             blast = SymAddr("?ApplyBlastPhysicsObjects@tThing@@QAEXPBUXGVECTOR3@@MM@Z");
+    auto callsTo = [](uint8_t *c, uint32_t to) { return c[0] == 0xE8 && (uint32_t)(c + 5 + *(int32_t *)(c + 1)) == to; };
+    if (!fn || !kill || !blast || !callsTo(fn + 0xf6, kill) || !callsTo(fn + 0x10c, blast)) {
+        Log("levelscript: unexpected cFireflyControl::DoSilentKill, the Firefly still kills bosses");
+        return;
+    }
+    int32_t k = (int32_t)((uint8_t *)FireflyKill - (fn + 0xf6 + 5)), b = (int32_t)((uint8_t *)FireflyBlast - (fn + 0x10c + 5));
+    WriteCode(fn + 0xf7, &k, 4);
+    WriteCode(fn + 0x10d, &b, 4);
+}
 // Finds a virtual function in a vtable and puts a wrapper in its slot; returns the original (0 if not found).
 static uint32_t WrapVirtual(const char *vtable, const char *fn, void *wrapper) {
     uint32_t *vt = (uint32_t *)SymAddr(vtable), f = SymAddr(fn);
@@ -878,6 +1184,52 @@ static void TrackLurkerRoars() {
             if (*(int *)(r.ai + 0x374) == 0x33) PlayFoley(*(void **)(r.ai + 8), "vox_alert");   // still roaring
             r.ai = nullptr;
         }
+}
+// Its claws (user: they rarely hit Nova): cAIBossLurker::UpdateAttackMelee tests each claw while it is armed (AI
+// +0x594 claw 1, +0x590 claw 2, cleared when it hits a player) with cAIInstance::MeleeHitCheck(3, n, 5, n, melee, 15
+// damage): a hit only if the segment between the claw's markers (type 3 #n, type 5 #n) crosses her hit region in a
+// frame it is checked. UpdateAttackMelee is wrapped: after the game's check, a claw still armed whose segment passes
+// within LURKER_CLAW_REACH of a player's body (either player; 1 m above her feet) hits her for the same damage (tActor::Damage,
+// melee) and is disarmed, as a hit of its own would.
+// (40 a claw, user; the game's 15, an immediate push before each MeleeHitCheck in UpdateAttackMelee, is patched to it)
+const float LURKER_CLAW_REACH = 1.2f, LURKER_CLAW_DAMAGE = 40.f;
+typedef unsigned(__thiscall *AttackFn)(uint8_t *);
+static AttackFn g_lurkerAttack;
+static unsigned __fastcall LurkerAttackMelee(uint8_t *ai) {
+    unsigned r = g_lurkerAttack(ai);
+    static auto markerPos = (int(__thiscall *)(void *, unsigned char, unsigned short, float *, float *))SymAddr(
+        "?GetMarkerPos@cModelInst@@QAEHEGPAUXGVECTOR3@@PAUXGMATRIX@@@Z");
+    typedef float(__thiscall *DamageFn)(uint8_t *, uint8_t *, int, int, float, float *, float *, unsigned, int, float, int *);
+    static auto damage = (DamageFn)SymAddr("?Damage@tActor@@QAEMPAVtThing@@W4eDamageSource@@W4eDamageType@@MPAUXGVECTOR3@@3IW4eHitRegionType@@MPAH@Z");
+    uint8_t *lurker = *(uint8_t **)(ai + 8), *inst = lurker ? *(uint8_t **)(lurker + 0x2a0) : nullptr;
+    uint32_t names = SymAddr("?gameMotion_apNames@@3PAPADA");
+    if (!inst || !markerPos || !damage || !names) return r;
+    for (int claw = 1; claw <= 2; claw++) {
+        int &armed = *(int *)(ai + (claw == 1 ? 0x594 : 0x590));
+        float a[3], b[3];
+        if (!armed || !markerPos(inst, 3, (unsigned short)claw, a, (float *)(lurker + 0x80)) ||
+            !markerPos(inst, 5, (unsigned short)claw, b, (float *)(lurker + 0x80)))
+            continue;
+        for (int side = 0; side < 2 && armed; side++) {
+            uint8_t **info = *(uint8_t ***)(names + (side ? 0x72c : 0x728));
+            uint8_t *p = info ? info[0] : nullptr;
+            if (!p || (*(uint32_t *)(p + 0x360) & 0x10000000)) continue;
+            const float *f = (const float *)(p + 0xb0);
+            float c[3] = {f[0], f[1], f[2] + 1.f}, ab[3] = {b[0] - a[0], b[1] - a[1], b[2] - a[2]};
+            float len2 = ab[0] * ab[0] + ab[1] * ab[1] + ab[2] * ab[2];
+            float t = len2 > 1e-6f ? ((c[0] - a[0]) * ab[0] + (c[1] - a[1]) * ab[1] + (c[2] - a[2]) * ab[2]) / len2 : 0.f;
+            t = t < 0.f ? 0.f : t > 1.f ? 1.f : t;
+            float q[3] = {a[0] + ab[0] * t - c[0], a[1] + ab[1] * t - c[1], a[2] + ab[2] * t - c[2]};
+            float d = sqrtf(q[0] * q[0] + q[1] * q[1] + q[2] * q[2]);
+            if (d > LURKER_CLAW_REACH) continue;
+            float dir[3] = {-q[0], -q[1], 0.f}, n = sqrtf(dir[0] * dir[0] + dir[1] * dir[1]);
+            if (n > 1e-3f) dir[0] /= n, dir[1] /= n;
+            damage(p, lurker, 1, 0, LURKER_CLAW_DAMAGE, c, dir, 0, 0, 0.f, nullptr);
+            armed = 0;
+            Log("levelscript: lurker claw %d reaches player %d (%.2f m from her body)", claw, side + 1, d);
+        }
+    }
+    return r;
 }
 // Its burrowed attacks (DoBurrowedDamage: the burst out of the ground from its AnimationCallback, 4 m, and the
 // unburrow, CMStartUnburrow, 2 m) did 25 damage: 90 (the user's tuning). The amount is an immediate push before each
@@ -1579,6 +1931,18 @@ static void FixLurkerSounds() {
     g_lurkerBurrow = (UpdateFn)WrapVirtual(vt, "?CMStartBurrow@cAIBossLurker@@UAEXXZ", (void *)LurkerBurrow);
     g_lurkerUnburrow = (UpdateFn)WrapVirtual(vt, "?CMStartUnburrow@cAIBossLurker@@UAEXXZ", (void *)LurkerUnburrow);
     g_lurkerBurst = (UpdateFn)WrapVirtual(vt, "?CMStartSpecial1@cAIBossLurker@@UAEXXZ", (void *)LurkerBurst);
+    g_lurkerAttack = (AttackFn)WrapVirtual(vt, "?UpdateAttackMelee@cAIBossLurker@@UAEIXZ", (void *)LurkerAttackMelee);
+    {   // its claws' damage: push 15.0f (68 00 00 70 41) -> LURKER_CLAW_DAMAGE, both checks
+        int n = 0;
+        uint8_t *f = (uint8_t *)SymAddr("?UpdateAttackMelee@cAIBossLurker@@UAEIXZ");
+        for (uint8_t *q = f; q && q < f + 0xe0; q++)
+            if (q[0] == 0x68 && *(uint32_t *)(q + 1) == 0x41700000) {
+                float v = LURKER_CLAW_DAMAGE;
+                WriteCode(q + 1, &v, 4);
+                n++;
+            }
+        if (n != 2) Log("levelscript: Lurker claw damage: %d of 2 constants patched", n);
+    }
     uint8_t *cb = (uint8_t *)SymAddr("?AnimationCallback@cAIBossLurker@@UAEXPAVcKeyChannel@@W4eRenderKeyTag@@I@Z");
     uint8_t *fire = (uint8_t *)SymAddr("?FireSpike@cAIBossLurker@@QAEXXZ");
     uint8_t *call = cb ? cb + 0x125 : nullptr;   // call FireSpike (0x4EEA45 originally)
@@ -1606,7 +1970,7 @@ static void RegisterMissingAIClasses() {
                           FixLurkerSounds(), InstallFlyDebug(),
                           FixOverlordFlight(), FixFlyerPatrol(), FixLurkerDamage(), FixSniperDamage(), FixPurifierBeam(),
                           FixGoliathBoss(), FixVultureSight(),
-                          FixScoutFlight();   // all levels
+                          FixScoutFlight(), FixVehicleLockdown(), HookDormant(), NoColonyIrradiate(), FireflyNoBossKill();   // all levels
     static bool enabled = getenv("GHOSTPC_NO_TANAGAZJ_AI") == nullptr;
     if (!enabled) { done = true; return; }
     uint32_t *num = (uint32_t *)SymAddr("?aiClass_numClasses@@3IA");
@@ -1986,6 +2350,7 @@ static void CalldownTest(uint8_t *world) {
 }
 
 void LevelScriptUpdate() {
+    LockdownFlags();
     g_crumb = "levelscript: start";
     RegisterMissingAIClasses();
     if (!g_activePlayer) g_activePlayer = (ActivePlayerFn)SymAddr("?gameMultiplayer_GetActivePlayer@@YAPAVtPlayer@@XZ");
@@ -2002,6 +2367,21 @@ void LevelScriptUpdate() {
             g_frame, g_worldLoads);
         g_crumb = "levelscript: stale check (load)";
         CheckStaleTables(world, world != g_loadedWorld ? "level load" : "restart");
+        // A restart revives only player 1 (user: Echo dead at a pause-menu Restart kept her dead flag, +0x360
+        // 0x10000000, so her HUD stayed hidden for the whole level). A local player still dead is revived as her
+        // button press would (cPlayerControl::UpdateDead: tActor::Revive(1, 1, 0)); the level script then places her.
+        if (world == g_loadedWorld) {
+            static auto revive = (int(__thiscall *)(uint8_t *, float, float, int))SymAddr("?Revive@tActor@@QAEHMMH@Z");
+            uint32_t names = SymAddr("?gameMotion_apNames@@3PAPADA");
+            for (int side = 0; side < 2 && revive && names; side++) {
+                uint8_t **info = *(uint8_t ***)(names + (side ? 0x72c : 0x728));
+                uint8_t *p = info ? info[0] : nullptr;
+                if (p && (*(uint32_t *)(p + 0x360) & 0x10000000)) {
+                    int r = revive(p, 1.f, 1.f, 0);
+                    Log("levelscript: restart: player %d was still dead, revived (%d)", side + 1, r);
+                }
+            }
+        }
         if (getenv("GHOSTPC_LOG_STARTS")) {   // debug: the level's player starts (tWorld +0xF0/+0xF4 and +0x100/+0x104,
                                               // 0x60-byte tPlayerStart: matrix +0x10, number +0x50, order +0x54)
             for (int list = 0; list < 2; list++) {
@@ -2058,6 +2438,46 @@ void LevelScriptUpdate() {
     }
     if (g_propsMode && g_frame % 15 == 0 && !StartProps(world, g_propsMode))
         g_propsMode = 0;   // every prop restarted
+    if (!g_inventory.empty() && g_frame - g_loadFrame >= 10) {   // inventory: every local player's
+        typedef void(__thiscall *SetAmountFn)(uint8_t *, int, unsigned);
+        static auto setAmount = (SetAmountFn)SymAddr("?SetPlayerItemAmount@tPlayer@@QAEXW4ePlayerItems@@I@Z");
+        uint32_t nm = SymAddr("?gameMotion_apNames@@3PAPADA");
+        int given = 0;
+        for (int side = 0; side < 2 && nm && setAmount; side++) {
+            uint8_t **info = *(uint8_t ***)(nm + (side ? 0x72c : 0x728));
+            if (!info || !info[0] || (side && info[0] == (*(uint8_t ***)(nm + 0x728))[0])) continue;
+            for (auto &it : g_inventory) setAmount(info[0], it.first, it.second);
+            given++;
+        }
+        Log("levelscript: inventory: %u item(s) given to %d player(s)", (unsigned)g_inventory.size(), given);
+        g_inventory.clear();
+    }
+    if (!g_weapons.empty() && g_frame - g_loadFrame >= 10) {   // weapon: every local player's
+        typedef unsigned(__thiscall *SetAmmoFn)(uint8_t *, int, unsigned);
+        typedef int(__thiscall *SetWeaponFn)(uint8_t *, int, int, int);
+        static auto setAmmo = (SetAmmoFn)SymAddr("?SetAmmo@tPlayer@@QAEIW4ePlayerAmmo@@I@Z");
+        static auto setWeapon = (SetWeaponFn)SymAddr("?SetPlayerWeapon@tPlayer@@QAEHW4ePlayerWeapons@@HH@Z");
+        uint32_t nm = SymAddr("?gameMotion_apNames@@3PAPADA");
+        for (int side = 0; side < 2 && nm; side++) {
+            uint8_t **info = *(uint8_t ***)(nm + (side ? 0x72c : 0x728));
+            if (!info || !info[0] || (side && info[0] == (*(uint8_t ***)(nm + 0x728))[0])) continue;
+            for (auto &w : g_weapons) {
+                uint8_t *pw = *(uint8_t **)(info[0] + 0x460 + 4 * w.first);
+                if (!pw) continue;
+                if (w.second == -2) {   // noweapon: skipped when cycling until something enables it (a pickup)
+                    pw[0x5f] |= 2;
+                    Log("levelscript: weapon %d hidden", w.first);
+                    continue;
+                }
+                pw[0x5f] &= ~2;   // selectable
+                if (w.second >= 0 && setAmmo) setAmmo(info[0], *(int *)(pw + 0x44), (unsigned)w.second);
+                Log("levelscript: weapon %d enabled (ammo type %d%s)", w.first, *(int *)(pw + 0x44), w.second >= 0 ? ", filled" : "");
+            }
+            static int pick = getenv("GHOSTPC_WEAPON") ? atoi(getenv("GHOSTPC_WEAPON")) : 0;
+            if (pick && setWeapon) Log("levelscript: debug: SetPlayerWeapon(%d) -> %d", pick, setWeapon(info[0], pick, 1, 0));
+        }
+        g_weapons.clear();
+    }
     if (g_cmds.empty() && !g_hasStart) return;
     uint8_t *player = GuardedPlayer();
     if (!player) return;
@@ -2133,6 +2553,7 @@ void LevelScriptUpdate() {
         }
         DebugAIUpdate(player);
     }
+    WakeDormant(world);
     const float *p = (const float *)(player + 0xb0);
     for (auto &n : g_cmds) {
         bool inBox = p[0] >= n.lo[0] && p[0] <= n.hi[0] && p[1] >= n.lo[1] && p[1] <= n.hi[1] && p[2] >= n.lo[2] &&

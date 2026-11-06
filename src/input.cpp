@@ -269,10 +269,10 @@ bool InputWndProc(HWND h, UINT m, WPARAM w, LPARAM l) {
 }
 
 // ---------------------------------------------------------------------------
-// Scripted input for automated tests: GHOSTPC_INPUT="900:Start,1000:A,1100:Left Axis Y+,1200:Esc" holds each
-// control for 8 frames starting at that frame.
+// Scripted input for automated tests: GHOSTPC_INPUT="900:Start,1000:A,1100:Left Axis Y+,1200:Esc" presses each
+// control for 2 frames starting at that frame; "1300:Y*40" holds it for 40.
 extern UINT g_frame;
-struct ScriptEv { UINT frame; int ctl; };
+struct ScriptEv { UINT frame; int ctl; UINT hold = 2; };   // (hold: frames, "<control>*<frames>", default 2)
 static bool g_scriptP2;   // the script drives player 2 too: port 1 is reported even without a second pad
 static std::vector<ScriptEv> g_script;
 static void LoadScript() {
@@ -290,10 +290,13 @@ static void LoadScript() {
         if (colon != std::string::npos && it.substr(colon + 1) == "Esc") g_script.push_back({(UINT)atoi(it.c_str()), -1});
         else if (colon != std::string::npos) {   // "P2 <control>": player 2's pad (port 1)
             std::string name = it.substr(colon + 1);
+            UINT hold = 2;
+            size_t star = name.find('*');
+            if (star != std::string::npos) hold = (UINT)atoi(name.c_str() + star + 1), name = name.substr(0, star);
             int base = name.compare(0, 3, "P2 ") ? 0 : C_COUNT;
             if (base) name = name.substr(3), g_scriptP2 = true;
             for (int i = 0; i < C_COUNT; i++)
-                if (name == kCtlNames[i]) g_script.push_back({(UINT)atoi(it.c_str()), base + i});
+                if (name == kCtlNames[i]) g_script.push_back({(UINT)atoi(it.c_str()), base + i, hold ? hold : 2});
         }
         if (c == std::string::npos) break;
         p = c + 1;
@@ -310,19 +313,20 @@ void ScriptEsc() {
     for (auto &e : g_script) if (e.ctl == -1 && g_frame == e.frame) InterlockedExchange(&g_escPressed, 1);
 }
 static float ScriptValue(int ctl) {
-    for (auto &e : g_script) if (ctl == e.ctl && g_frame >= e.frame && g_frame < e.frame + 2) return 1.f;
+    for (auto &e : g_script) if (ctl == e.ctl && g_frame >= e.frame && g_frame < e.frame + e.hold) return 1.f;
     return 0.f;
 }
 
 // ---------------------------------------------------------------------------
 // Evaluate bindings
+bool MouseDirect();   // camera.cpp: Nova herself (not a vehicle) is player 1, so the camera takes the mouse directly
 struct MouseFrame { float dx, dy, wheel; };
 static float BindValue(const Bind &b, const MouseFrame &mf) {
     switch (b.kind) {
     case BK_KEY: return (GetAsyncKeyState(b.code) & 0x8000) ? 1.f : 0.f;
     case BK_MBTN: return (b.code >= 0 && b.code < 5 && (g_mbtn[b.code] || g_mlatch[b.code])) ? 1.f : 0.f;
     case BK_MAXIS: {
-        if (MouseLookActive()) return 0.f;   // the camera reads mouse motion directly (camera.cpp)
+        if (MouseLookActive() && MouseDirect()) return 0.f;   // the camera reads mouse motion directly (camera.cpp)
         float d = (b.code == 0 ? mf.dx : mf.dy) * b.sign / g_mouseRange;
         return std::min(std::max(d, 0.f), 1.f);
     }
@@ -408,6 +412,7 @@ static void ReadPad(DWORD i, XB_GAMEPAD &g) {
     }
 }
 bool CompetitiveMatch();   // competitive.cpp
+bool RidingVulture(int local);   // vehicles.cpp: local player 0 / 1 is on a Vulture
 static DWORD g_backAt;   // when Back was last held (either port) in a competitive match
 XSTD(DWORD, XInputGetState, 8, (HANDLE h, XB_INPUT_STATE *st)) {
     static DWORD packet;
@@ -451,6 +456,15 @@ XSTD(DWORD, XInputGetState, 8, (HANDLE h, XB_INPUT_STATE *st)) {
             g.sThumbRX = merge(g.sThumbRX, Axis(v[C_RXP], v[C_RXM]));
             g.sThumbRY = merge(g.sThumbRY, Axis(v[C_RYP], v[C_RYM]));
         }
+    }
+    // riding a Vulture (vehicles.cpp): it accelerates on A and brakes on X, and does not read the stick's forward axis;
+    // the stick forward / back (W / S) press those instead
+    if (RidingVulture((uintptr_t)h == 2 ? 1 : 0)) {
+        int ly = g.sThumbLY;
+        BYTE amount = (BYTE)std::min(255, std::abs(ly) * 255 / 32767);
+        if (ly > 8000) g.bAnalogButtons[AB_A] = std::max(g.bAnalogButtons[AB_A], amount);
+        if (ly < -8000) g.bAnalogButtons[AB_X] = std::max(g.bAnalogButtons[AB_X], amount);
+        g.sThumbLY = 0;
     }
     // a competitive match: Back is the scoreboard (competitive.cpp), not the game's controls screen
     if ((g.wButtons & XB_BACK) && CompetitiveMatch()) {

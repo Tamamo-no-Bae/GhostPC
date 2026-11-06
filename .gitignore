@@ -8,7 +8,11 @@
 # compiled levels (shipped in the release zip, not the source) and a local SDK copy
 /levels/zoo/out/
 /levels/arena/out/
+/levels/vehicles/out/
+/levels/duel/out/
+/levels/bladearena/out/
 /levels/zoo/sdk/
+/levels/sdk/
 # release staging: only the patch's text files are tracked; the zips go to GitHub Releases, and the patch's game
 # files (Strings, Misc, Sounds, UI images) stay local
 /release/*
@@ -23,6 +27,15 @@
 /release/GhostPC_Patch/mapsrc/arena/*
 !/release/GhostPC_Patch/mapsrc/arena/README.txt
 !/release/GhostPC_Patch/mapsrc/arena/compile_arena.bat
+!/release/GhostPC_Patch/mapsrc/vehicles/
+/release/GhostPC_Patch/mapsrc/vehicles/*
+!/release/GhostPC_Patch/mapsrc/vehicles/compile_vehicles.bat
+!/release/GhostPC_Patch/mapsrc/duel/
+/release/GhostPC_Patch/mapsrc/duel/*
+!/release/GhostPC_Patch/mapsrc/duel/compile_duel.bat
+!/release/GhostPC_Patch/mapsrc/bladearena/
+/release/GhostPC_Patch/mapsrc/bladearena/*
+!/release/GhostPC_Patch/mapsrc/bladearena/compile_bladearena.bat
 # logs, dumps, caches
 *.log
 *.dmp

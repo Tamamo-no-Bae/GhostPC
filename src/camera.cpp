@@ -52,8 +52,25 @@ static bool PlayerOne(void *ctl) {
         return player && *(void **)(player + 0x520) == *(void **)(names + 0x728);
     } __except (EXCEPTION_EXECUTE_HANDLER) { return true; }
 }
+// The mouse turns the camera directly only while player 1 is Nova herself (her control is a cPlayerControl). In a
+// vehicle or a remote unit (Vulture, Siege Tank, Goliath, Spider Mine, Firefly, Mantis: tPlayer::MountVehicle makes
+// the vehicle the player) the mouse is the right stick again (input.cpp), which their own camera code reads: the
+// Spider Mine through stdInput_GetAnalogJoyStick, the Vulture's and the siege mode's cameras straight from the pad.
+static bool ControlIsNova(uint32_t names, uint32_t playerControl) {
+    __try {
+        uint8_t **info = names ? *(uint8_t ***)(names + 0x728) : nullptr;
+        uint8_t *player = info ? info[0] : nullptr;
+        uint8_t *ctl = player ? *(uint8_t **)(player + 0x3f8) : nullptr;
+        return !ctl || *(uint32_t *)ctl == playerControl;
+    } __except (EXCEPTION_EXECUTE_HANDLER) { return true; }
+}
+bool MouseDirect() {
+    static uint32_t names = LocalPlayers();
+    static uint32_t playerControl = SymAddr("??_7cPlayerControl@@6B@");
+    return ControlIsNova(names, playerControl);
+}
 static float MouseTerm(void *ctl, float counts, float rate) {
-    if (!MouseLookActive() || counts == 0.f || !PlayerOne(ctl)) return 0.f;
+    if (!MouseLookActive() || counts == 0.f || !PlayerOne(ctl) || !MouseDirect()) return 0.f;
     float dt = FrameTime();
     if (dt <= 0.f) return 0.f;
     float deg = counts * kDegPerCount * g_settings.mouseSensitivity / 100.f;
@@ -86,7 +103,7 @@ static void *GameCamera(void *ctl) {
 // Mouse turn in degrees for this frame (stick-equivalent signs: mouse right = stick right, mouse up = stick down,
 // as in GetCameraYaw/Pitch above), then the camera angles.
 static void MouseTurnCamera(void *ctl, float scale, float pitchMin, float pitchMax) {
-    if (!MouseLookActive() || (g_frameLookDX == 0.f && g_frameLookDY == 0.f) || !PlayerOne(ctl)) return;
+    if (!MouseLookActive() || (g_frameLookDX == 0.f && g_frameLookDY == 0.f) || !PlayerOne(ctl) || !MouseDirect()) return;
     static auto norm = (AngleFn)SymAddr("?mathTrig_NormalizeAngle@@YAMM@Z");
     static auto acute = (AngleFn)SymAddr("?mathTrig_NormalizeAngleAcute@@YAMM@Z");
     float k = kDegPerCount * g_settings.mouseSensitivity / 100.f * scale;

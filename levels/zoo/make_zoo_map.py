@@ -18,7 +18,8 @@ Layout (game units = metres, X east, Y north, Z up; north is up in the sketch):
     |                                                           |  room
     +-----------------------------------------------------------+
 
-Big rooms are open to the sky (sky ceiling at 45 m: the Nexus is 28.6 m tall and flyers cruise around 20-25 m) and
+Big rooms are open to the sky (walls 45 m high: the Nexus is 28.6 m tall and flyers cruise around 20-25 m; the
+Robota skybox behind everything, as the original outdoor levels draw theirs) and
 sized for their largest units and buildings. Corridors, hallway, doors and the spawn room are Nova-sized. Every big
 room has its own waypoint grid with no links through doors, so units (including the human-sized Vulcan and Tanagazj)
 stay in their rooms; the L-shaped hallway also keeps Vulcan's missiles out of the Terran area.
@@ -92,19 +93,17 @@ BOUNDS = (-T, -T, 264, 321)
 # collision made the physics produce NaN on the first frame, so the origin must stay clear.
 OFFSET = (-SNIPER_ORIGIN[0], -SNIPER_ORIGIN[1], -0.3)
 
-# Surfaces name DDS textures directly: MAPtoNIL 0.6.7 rejects archived (.nsa) materials as "scripted sector shaders"
-# and only accepts texture basenames that are not also material names in the shaderlist archives. The ceiling is
-# compiled with SKY_PLACEHOLDER and renamed to the global sky material afterwards (install_zoo.py). The engine draws
-# "sky" surfaces unlit with their own texture, so the ceiling becomes the top face of the clear Robota skybox
-# (global 3dmaterials archive), stretched once across the level instead of tiled.
-SKY_PLACEHOLDER, SKY_MATERIAL = "MS_Crater", "sky_Robota_02_Up"
-SKY_SPAN = 240.0  # metres covered by one repeat of the sky texture
+# The sky (OpenNOD SDK 0.6.8 worldspawn keys, MAPtoNSD): the clear blue Robota skybox model (3D\Models; its materials
+# are in the global 3dmaterials archive) drawn over the whole viewport behind the level ("unmasked": scene flag 0x2,
+# as on every original outdoor level - Miners Bunker, Hive Station, the menu). Nothing covers the big rooms; the
+# masked alternative draws the sky only through sky-material surfaces. The game strips the extension when it loads
+# the model (gameScene_Load); there is no sky animation (.nad) for it.
+SKY_MODEL = "sky_Robota_02.nod"
 MAT = {
     "floor_protoss": "AR_FloorSwirly_blu_01", "wall_protoss": "AR_Plated_blu_gld_01",
     "floor_terran": "MS_Asphalt", "wall_terran": "AR_PillarPanel_brn_01",
     "floor_zerg": "GE_fleshA_gry", "wall_zerg": "GE_ribbedA_grn",
     "floor_corr": "AR_Bridge_Floor", "wall_corr": "AR_Edge_Plain",
-    "sky": SKY_PLACEHOLDER,
 }
 TILE = 4.0   # metres per texture repeat
 
@@ -121,7 +120,6 @@ def dds_width(name):
 
 
 TEX_SCALE = {m: TILE / dds_width(m) for m in MAT.values()}
-TEX_SCALE[SKY_PLACEHOLDER] = SKY_SPAN / dds_width(SKY_PLACEHOLDER)   # same width as the sky texture (512)
 
 # ---------------------------------------------------------------------------------------------------------------
 # Geometry
@@ -387,8 +385,6 @@ roof(UCORR)
 for leg_l, cross, leg_r, _ in U_LOOPS.values():
     for r in (leg_l, cross, leg_r):
         roof(r)
-# sky ceiling over everything: it also keeps flyers in. Baked without shadows so the sun reaches the rooms.
-box(BOUNDS[0], BOUNDS[1], H, BOUNDS[2], BOUNDS[3], H + 1, MAT["sky"])
 
 
 def brush_text(b):
@@ -436,16 +432,27 @@ def template_type(name):
     return 0
 
 
+# GhostPC's own templates (game/Misc/Templates/ghostpc.not, scripts/make_ghostpc_templates.py) -> (their basedon, model
+# scale). MAPtoNSD wants one archive context for every placement (nod_template_archives; Global is implicit): the
+# scene then lists ghostpc.not and the game opens it with the level (as levels/vehicles/make_vehicle_map.py).
+GHOSTPC_TEMPLATES = {"reaver_prop_small": ("reaver_prop", 0.75), "powHellfire": ("powCanisterHellfire", 1.0),
+                     "powFlamethrower": ("powFThrower", 1.0)}
+
+
 def tmpl(name, origin, yaw, **overrides):
     """Native template placement, written the way nodsdk-radiant does (nodtemplates.h): MAPtoNSD needs the template
-    binding (Global.not, no extra archives) and its native type."""
+    binding (its archive, the same archive list on every placement) and its native type."""
+    if name in GHOSTPC_TEMPLATES:
+        archive, ttype = "ghostpc.not", template_type(GHOSTPC_TEMPLATES[name][0])
     # MAPtoNSD matches template names case-sensitively ("Unresolved template or stale archive provenance")
-    if not any(nm == name for nm, _ in notdump.idx):
+    elif not any(nm == name for nm, _ in notdump.idx):
         raise SystemExit("template name case: %s (Global.not has %s)" % (
             name, [nm for nm, _ in notdump.idx if nm.lower() == name.lower()]))
+    else:
+        archive, ttype = "global.not", template_type(name)
     PLACED.append((name, tuple(origin), yaw))
     ent("nod_template_instance", origin, nod_authoring="map-template-v1", nod_template=name,
-        nod_template_archive="global.not", nod_template_archives="", nod_template_type=template_type(name),
+        nod_template_archive=archive, nod_template_archives="ghostpc.not", nod_template_type=ttype,
         angles="0 %g 0" % yaw, **overrides)
 
 
@@ -490,7 +497,8 @@ BUILDINGS = [
     ("gateway_building", 40, 30), ("pylon", 72, 16),                       # Protoss: Gateway next to the Pylon,
     ("shieldbattery_building", 88, 16),                                     # shield battery on its other side
     ("nexus_building", 155, 52),
-    ("reaver_prop", 100, 42),         # props_player_only: only Nova's shots cycle its animation
+    ("reaver_prop_small", 100, 42),   # (GhostPC's reaver_prop at the vehicle Reaver's 0.75 scale) props_player_only:
+                                      # only Nova's shots cycle its animation
     ("bunker", 14, 128), ("MissileTurret", 66, 128),                        # Terran
     # Zerg: the Sunken Colony and the Nydus Canal in the south part, the Command Center and the Spore Colony in the
     # north part (each turned to face into the room). The Sunken's tongue reaches 60 m with no line-of-sight test
@@ -576,6 +584,9 @@ UNITS = [
     ("scout", 90, 75, 90), ("shuttle", 60, 85, 90), ("observer", 45, 70, 90),
     ("dragoon", 30, 62, face(30, 62, *NEXUS_AT)), ("zealot", 20, 75, face(20, 75, *NEXUS_AT)), ("highTemplar", 105, 62, 90), ("probe", 85, 50, 90),
     ("purifier", 70, 55, 90),
+    # the player turrets (user's spots, from an annotated overview): the Gauss turret west of the Hauler room facing
+    # north, the flame turret by the Ultralisk room's south door facing north-east (yaw 0 north, 270 east)
+    ("Turret_player", 20.1, 207.4, 0), ("FlameTurret_player", 208.9, 146.1, 315),
     ("AR_psiDampener", 120, 110.0, 180),   # touching the hallway wall (y 110; model depth +Y from its back plate at the
                                            # origin), facing the room
     ("cloakGenerator", 11.2, 106, 270),   # wall-mounted on the spawn room's outer (east) wall, facing the room
@@ -598,9 +609,9 @@ UNITS = [
     ("dropship_cut", 60, 150, 0),                                          # landed: 16 x 25 m on the floor (x 52-68, y 133-158)
     ("wraith", 20, 140, 90),                                               # air unit, raised (RAISE)
     # the ghost stands at the far end next to Artemis (by the hallway wall he heard Nova and came out); both face the
-    # Terran room's door, as does Nova's cutscene Vulture
+    # Terran room's door, as does the elite Firebat (in place of Nova's cutscene Vulture, now on the vehicle map)
     ("ghost_male", 22, 181, face(22, 181, 80, DOOR_Y["terran"])),
-    ("novaVulture_cut", 45, 186, face(45, 186, 80, DOOR_Y["terran"])),
+    ("firebat_elite", 45, 186, face(45, 186, 80, DOOR_Y["terran"])),
     ("hauler_cut", 62, 186, face(62, 186, 80, DOOR_Y["terran"])),         # cutscene Hauler (no AI)
     ("spiderMine", 3, 119, 45),                                            # south-west corner, far from both doors
     # Artemis: her model is an older 32-bone skeleton; Artemis (BOSSARTEMIS, no such AI class) and artemis_prop (plays
@@ -624,7 +635,7 @@ UNITS = [
     ("sniper_boss", SNIPER_AT[0], SNIPER_AT[1], 0),    # facing his door (south)                                            # boss (fires missiles): own room
     # Zerg
     ("mutalisk", MUTA_PTS[0][0], MUTA_PTS[0][1], 0),   # at its flight path's start (MUTA_PATH), yaw 0 ("scourge", 142, 157, 180), ("infestedTerran", 150, 175, 180),
-    ("ultralisk_cut", 112, 186, 180),                                       # cutscene Ultralisk (no AI), 16 x 8 m
+    ("testEnemy_old", 112, 186, 180),   # the Szlachta (no AI; user: in place of the cutscene Ultralisk; scripts/convert_redemption_nod.py)
     ("zergEgg", 132, 180, 180), ("larva", 126, 167, 150),
     ("zergling", 135, 170, 180), ("infestedSCVdriver", 158, 160, 180),
     ("zergPustule", 140, 185, 0), ("overlord", 140, 190, 180),
@@ -635,10 +646,22 @@ UNITS = [
     # supplies just inside each boss room's door (see SUPPLY_AT), with a health and a psi energy pickup at the ends
 ] + [(t, x + dx, y + dy, 0) for x, y, (ux, uy) in SUPPLY_AT
      for t, k in (("powEnergy", -3), ("powGauss_2x", -2), ("powGauss_2x", -1), ("powSnipe_2x", 0), ("powGrenade", 1),
-                  ("powGrenade", 2), ("powHealth", 3))
-     for dx, dy in ((k * ux * 1.5, k * uy * 1.5),)] + [
+                  ("powCanisterSmoke", 2), ("powHealth", 3), ("powCanisterSticky", 4), ("powHellfire", 5),
+                  ("powFThrower", -4))
+     # (the grenades the missions never give, user: smoke, sticky, hellfire; powHellfire is GhostPC's template with
+     # the name cPowerupCanister::GetItemType checks, Global.not's powCanisterHellfire gave nothing)
+     for dx, dy in ((k * ux * 1.1, k * uy * 1.1),)] + [
     # spawn room: health, ammunition and psi energy along its south wall (the door is in the north wall at x 5)
     ("powHealth", 3, 103.2, 0), ("powGauss_2x", 4, 103.2, 0), ("powSnipe_2x", 5, 103.2, 0), ("powEnergy", 6, 103.2, 0),
+    # ... and the unused grenades (user): smoke, sticky, hellfire
+    ("powCanisterSmoke", 7, 103.2, 0), ("powCanisterSticky", 8, 103.2, 0), ("powHellfire", 9, 103.2, 0),
+    # remote-controlled units (inventory items, see FINDINGS: player vehicles): Spider Mine, Firefly and Mantis, west of
+    # the north door
+    ("powSpiderMine", 1.2, 108.6, 0), ("powFireFly", 2.2, 108.6, 0), ("powMantis", 3.2, 108.6, 0),
+    # the flamethrower (user: in the Lurker boss room, not the spawn room): GhostPC's powFlamethrower, the flame ammo
+    # pickup under its own name, which (vehicles.cpp) also makes the weapon selectable; against the room's east wall,
+    # behind the boss. Every boss room's supply row has a plain flame ammo pickup (powFThrower, user)
+    ("powFlamethrower", 197.5, 226, 0),
     # masked Nova: the cutscene template never animates (bind pose); an animated Nova prop with the masked model as a
     # placement override did not render at all, so the T-pose version stays
     ("rhynadon_prop", 2, 106, 0), ("Nova_mask_cut", 8.5, 104, 90),
@@ -658,7 +681,7 @@ RAISE = {"mutalisk": 0.0,   # set to its flight path's start height below
          "rhynadon_prop": -1.85,
          "Hauler_Boss": -0.3,
          # cutscene templates (no AI) have no gravity either: placed at floor level instead of 0.1 m above it
-         "Nova_mask_cut": -0.1, "Artemis_cut": -0.1, "novaVulture_cut": -0.1, "hauler_cut": -0.1, "dropship_cut": -0.1,
+         "Nova_mask_cut": -0.1, "Artemis_cut": -0.1, "hauler_cut": -0.1, "dropship_cut": -0.1,
          "sniper_boss": PERCHES[0][2] - OFFSET[2] - 0.1}   # on the MT pillar (world z = MT's feet)
 RAISE["mutalisk"] = MUTA_PTS[0][2] - 0.1
 # per-placement template property overrides (this map only): {template: {"nod_prop_<modifier id>": value}}
@@ -672,11 +695,16 @@ RAISE["mutalisk"] = MUTA_PTS[0][2] - 0.1
 OVERRIDES = {"Artemis_cut": {"nod_prop_13": "dropship_cut"}, "Goliath_232": {"nod_prop_15": "none"},
              # ... and the zoo's motion set: goliath_222c.nms plus placeholders for the modes it lacks (zoo_goliath_222c.nms,
              # copied to 3D\Motions by install_zoo.py)
-             "Goliath_222c": {"nod_prop_43": "BOSSGOLIATH", "nod_prop_13": "zoo_goliath_222c.nms"}}
+             "Goliath_222c": {"nod_prop_43": "BOSSGOLIATH", "nod_prop_13": "zoo_goliath_222c.nms"},
+             }
 
 
 def model_bounds(name):
-    """model bounding box (min, max) of a template, from its .nod header"""
+    """model bounding box (min, max) of a template, from its .nod header (a GhostPC template: its base's, scaled)"""
+    if name in GHOSTPC_TEMPLATES:
+        base, k = GHOSTPC_TEMPLATES[name]
+        mn, mx = model_bounds(base)
+        return tuple(v * k for v in mn), tuple(v * k for v in mx)
     seen, n, model = set(), name, None
     while n and n.lower() not in seen and model is None:
         seen.add(n.lower())
@@ -697,7 +725,7 @@ for b in BUILDINGS:
     if yaw == 180:
         mn, mx = (-mx[0], -mx[1], mn[2]), (-mn[0], -mn[1], mx[2])
     footprints.append((x + mn[0], y + mn[1], x + mx[0], y + mx[1], t))
-    tmpl(t, (x, y, 0.1 + RAISE.get(t, 0.0)), yaw)
+    tmpl(t, (x, y, 0.1 + RAISE.get(t, 0.0)), yaw, **OVERRIDES.get(t, {}))
 
 footprints += [(x - 2, y - 2, x + 2, y + 2, "pillar") for x, y in PILLARS]
 ROOMS = {"Protoss": PROTOSS, "Terran": TERRAN, "Zerg": ZERG, "Tanagazj": TANAGAZJ, "Ultralisk": ULTRA,
@@ -781,6 +809,7 @@ while tri_estimate(SPACING) > TRI_TARGET and SPACING < 128:
 with open(OUT, "w", newline="\n") as f:
     f.write("// Enemy Zoo Test map (9_1_1a_Enemy_Zoo) - generated by make_zoo_map.py, do not edit by hand\n")
     f.write('{\n"classname" "worldspawn"\n"nod_light_spacing" "%g"\n' % SPACING)
+    f.write('"nod_sky_model" "%s"\n"nod_sky_unmasked" "1"\n' % SKY_MODEL)
     for b in brushes:
         f.write(brush_text(b))
     f.write("}\n")
@@ -820,8 +849,20 @@ with open(os.path.join(HERE, "out_levelscript.gpc"), "w", newline="\r\n") as f:
     # the animation-cycling props (rhynadon_prop, reaver_prop) open with their "stand" pose instead of "run"
     f.write("props_start stand\n")
     f.write("props_player_only\n")   # other units' fire does not cycle them (the Reaver near the Scout)
+    # the unused grenades, to test (user): smoke, sticky and hellfire, 5 each (the missions only ever give frag)
+    for item in ("smokegrenade", "stickygrenade", "hellfiregrenade"):
+        f.write("inventory %s 5\n" % item)
+    # the flamethrower: hidden until its pickup in the Lurker room (powFlamethrower); the mission's AMMO line would
+    # otherwise give it from the start (all weapons start selectable here)
+    f.write("noweapon flamethrower\n")
     # the Ultralisk boss pins itself and only its (missing) mission script released it: its charge needs it unpinned
     f.write("unpin cAIBossUltralisk\n")
+    # the Hauler and the Ultralisk stay still (their AI not run) until a player enters their room or hits them (user:
+    # they came for Nova before she reached them)
+    for room, cls in ((HAULER, "cAIBossHauler"), (ULTRA, "cAIBossUltralisk")):
+        lo = [room[0] + OFFSET[0], room[1] + OFFSET[1], -5.0]
+        hi = [room[2] + OFFSET[0], room[3] + OFFSET[1], 20.0]
+        f.write("dormant %g %g %g %g %g %g %s\n" % tuple(lo + hi + [cls]))
     f.write("sunken_los\n")   # Sunken Colonies strike only what they can see (not through walls into the hallways)
     # the Mutalisk flies (and attacks from) its path; the rate is key frames per second (30: a 15 s lap)
     f.write("fly_path cAIZergMutalisk %s 30\n" % MUTA_PATH)
@@ -845,6 +886,8 @@ with open(os.path.join(HERE, "out_frames.txt"), "w") as f:
 # blade (cAIBossTanagazj::BladeOn) was invisible without one. Union of the original lists, the blade effects and every
 # EFFECTn of the placed templates, keeping only names defined in Misc\game.nfx.
 def template_effects(name):
+    if name in GHOSTPC_TEMPLATES:   # (a GhostPC template: its base's effects)
+        name = GHOSTPC_TEMPLATES[name][0]
     seen, n, out = set(), name, []
     while n and n.lower() not in seen:
         seen.add(n.lower())
@@ -854,11 +897,14 @@ def template_effects(name):
     return out
 
 
-nfx = open(os.path.join(GAME, "Misc", "game.nfx"), "rb").read().lower()
+nfx = (open(os.path.join(GAME, "Misc", "game.nfx"), "rb").read() +   # (GhostPC's ghostpc.nfx is appended to it)
+       open(os.path.join(GAME, "Misc", "ghostpc.nfx"), "rb").read()).lower()
 effects = []
 for lst in ("1_2_1a_Miners_Bunker.nlfx", "2_2_2a_Threat_BaseUpper.nlfx"):
     effects += [l.strip() for l in open(os.path.join(GAME, "Levels", lst), encoding="latin1") if l.strip()]
-effects += ["psiblade", "psiblade2"]
+effects += ["psiblade", "psiblade2", "psibladeNova", "psibladeNovaGlow", "psibladeNovaBeam",
+            "superdiveshock", "superdiveshock0", "superdiveshock1", "psibladeShock", "psibladeImpact",
+            "bladeDive", "diveshock", "diveshock0", "diveshock1"]   # (+ the Psi Blade's; the plunge's impact)
 for t in [b[0] for b in BUILDINGS] + [u[0] for u in UNITS]:
     effects += template_effects(t)
 unique = []

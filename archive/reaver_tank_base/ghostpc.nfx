@@ -1,0 +1,21 @@
+; ghostpc.nfx -- GhostPC's own effects. GhostPC appends this file to game.nfx when the game reads it (xapi.cpp), so
+; the original stays untouched. Same syntax as game.nfx.
+
+; The Reaver's Scarab (proj_reaverScarab, Misc/Templates/ghostpc.not): a trail of smaller blue glows left behind the
+; photon glow (tossTurretProj), shrinking and fading like afterimages (after arcliteTrail, sparser and smaller)
+smoke				scarabTrail
+material			GE_PAR_LensFlare1_blue
+startcolor		0xc0a0a0ff
+endcolor			0x00a0a0ff
+max_particles	40
+spawn_delay		0.05
+duration			8
+part_life		0.4
+part_size0		1.2
+part_size1		0.2
+velocity_z		0
+type_flags		0x01
+flags				0x400
+renderradius	25
+priority			2
+end

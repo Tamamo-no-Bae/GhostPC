@@ -63,6 +63,7 @@ marineArmourSpark
 marineHitBlade
 wallSparkSmall
 bladeHit
+bladeshock
 hydraspikewep
 steamDoor
 steamDoorFall
@@ -78,6 +79,11 @@ steamPowerBurst
 protossShield
 playerChargeGlow
 psiblade2
+psibladeNova
+psibladeNovaGlow
+psibladeNovaBeam
+psibladeShock
+psibladeImpact
 ProtBuildDam
 TrnBuildDam
 infestComFly
@@ -94,6 +100,8 @@ TemplarGlow
 templar_torsolight
 purifierVortex
 purifierBeam
+playerTurretFX
+DamDynFireSml
 psiDrain
 dampener
 darkTemplar_eye_fx
@@ -101,7 +109,6 @@ darkArchonGlow
 darchon_eye_fx
 goliath_spotlight
 goliathguns
-DamDynFireSml
 sciVessel_light
 vultureFX
 vultureGun

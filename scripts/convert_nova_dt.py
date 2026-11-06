@@ -15,6 +15,13 @@ import sys
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 MODELS = os.path.join(os.environ.get("GHOST_GAME_DIR", os.path.join(ROOT, "game")), "3D", "Models")
+# GhostPC's markers on top of nova.nod's: (bone, type, index, 3x3 axes as rows X, Y, Z, position), in the bone's frame.
+# The Psi Blade (src/psiblade.cpp, ghostpc.nfx psibladeNova, markertype 58): the right gauntlet's wrist end (the forearm,
+# bone 31: elbow at model x -0.41, hand at -0.69; the gauntlet bulges about 9 cm below the arm at x -0.52 to -0.60),
+# its Z (the beam's direction) along the arm toward the hand, so the blade points down past the hand when it hangs.
+# User's mockup: out of the wristband's lower edge (user: not its middle, which -0.20 was; -0.27 still a bit high, -0.32 cleared the band) on the outer side of the hand (the arm's top in the rest pose, palms
+# down: +z), past the hand, tilted 10 degrees outward (X and Z turned about Y).
+EXTRA_MARKERS = [(31, 58, 0, [(0.1736, 0, 0.9848), (0, 1, 0), (-0.9848, 0, 0.1736)], (-0.29, 0.0, 0.045))]
 OLD_TO_NEW = {0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 9, 8: 10, 9: 11, 10: 12, 11: 12, 12: 12, 13: 12,
               14: 25, 15: 26, 16: 27, 17: 28, 18: 29, 19: 30, 20: 31, 21: 32, 22: 33, 23: 34, 24: 35, 25: 36, 26: 37,
               27: 38, 28: 39, 29: 40, 30: 41, 31: 42}
@@ -52,10 +59,14 @@ def main():
         o = 56 * g
         for k in range(groups[o + 0x35]):
             groups[o + 0x21 + k] = OLD_TO_NEW[groups[o + 0x21 + k]]
-    markers = new[ln["markers"]:]                          # count, Nova's 39 markers, end
+    markers = bytearray(new[ln["markers"]:-4])             # count, Nova's 39 markers (the end added below)
+    for bone, typ, idx, axes, pos in EXTRA_MARKERS:
+        markers += struct.pack("<BBH12f", bone, typ, idx, *[c for row in axes for c in row], *pos)
+    struct.pack_into("<I", markers, 0, ln["nmarkers"] + len(EXTRA_MARKERS))
+    markers += bytes(4)
     open(out, "wb").write(bytes(head) + bones + body + bytes(groups) + markers)
-    print("wrote %s: %d bytes (%d mesh groups renumbered, %d markers from nova.nod)" % (
-        out, os.path.getsize(out), lo["mgc"], ln["nmarkers"]))
+    print("wrote %s: %d bytes (%d mesh groups renumbered, %d markers from nova.nod + %d GhostPC)" % (
+        out, os.path.getsize(out), lo["mgc"], ln["nmarkers"], len(EXTRA_MARKERS)))
 
 
 if __name__ == "__main__":

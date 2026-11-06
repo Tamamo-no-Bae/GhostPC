@@ -142,3 +142,108 @@ NovaIceFace_hair
 	texture NovaIceFace
 	sightForceHot
 }
+
+// Echo in Dark Templar armour (nova_DT43_echo.nod, scripts\make_echo_dt.py): Nova's DT materials with Echo's
+// textures (EchoDarkTemplar, Echo_DT_New), for the Psi Blade in co-op
+Echo_DT_Armor_gloss
+{
+; the armour plates
+	shader glossenvmap
+	meshType 7
+	texture Echo_DT_New
+	envmap GE_env_room_blu.dds
+	sightForceMedium
+	sound creep
+}
+
+Echo_DT_Armor_light
+{
+; the white bodysuit
+	shader	ghostsuit
+	meshType 7
+	texture	Echo_DT_New
+	envmap	bandtest
+	sightForceHot
+	sound creep
+}
+
+Echo_DT_New
+{
+; the hair
+	shader normal
+	meshType 7
+	texture Echo_DT_New
+	sightForceHot
+	sound creep
+}
+
+Echo_DT_New_full
+{
+; the suit lights
+	shader fullbright
+	meshType 7
+	texture Echo_DT_New
+	sightForceHot
+	sound creep
+}
+
+Echo_DT_gloss
+{
+; Dark Templar straps, cloth pieces and claws
+	shader glossenvmap
+	meshType 7
+	texture EchoDarkTemplar
+	envmap GE_env_room_blu.dds
+	sightForceMedium
+	sound creep
+}
+
+echo_DT_glow
+{
+; the Dark Templar helmet
+	shader	glow
+	meshType 7
+	texture	EchoDarkTemplar
+	sightForceHot
+	sound creep
+}
+
+echoRifle_unarmed
+{
+; her rifle (painted into Nova_DT_New)
+	shader glossenvmap
+	meshType 4
+	texture Echo_DT_New
+	envmap GE_env_room_blu.dds
+	sightforcecool
+	sound metal
+}
+
+// The Szlachta (testEnemy_old's szlachta.nod, converted from Vampire: The Masquerade - Redemption's demo by
+// scripts/convert_redemption_nod.py): its two materials, as Redemption's .nam files (masked; the _dbl one twosided)
+SzlachtaCombo
+{
+	shader masked
+	meshType 7
+	texture SzlachtaCombo
+	sound creep
+}
+
+SzlachtaCombo_dbl
+{
+	shader masked
+	meshType 7
+	texture SzlachtaCombo
+	twosided
+	sound creep
+}
+
+NovaIce_hot
+{
+; Echo's head marked hot in sight mode (NovaReduxFinal_hot on her texture; novaVulture_echo.nod, make_echo_vulture.py)
+	shader normal
+	meshType 7
+	texture NovaIce
+	sightForceHot
+	sound creep
+}

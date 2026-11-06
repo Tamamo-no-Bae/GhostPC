@@ -3,6 +3,8 @@
 #include <malloc.h>
 #include <string>
 #include <algorithm>
+#include <vector>
+#include <ctype.h>
 
 // ---------------------------------------------------------------------------
 // Paths. D: is the game folder; T:, U:, Z: live under <game>\save\<letter>.
@@ -38,9 +40,104 @@ bool XboxPathToHost(const char *x, char *out, size_t n) {
 
 // ---------------------------------------------------------------------------
 // Files
+// game.nfx (every effect definition, read once by cFXCache::CacheEffectData) gets GhostPC's own effects appended:
+// the game is handed <save>\ghostpc_game.nfx = game.nfx + Misc\ghostpc.nfx, rebuilt at each open; game.nfx itself
+// stays untouched. Without ghostpc.nfx the original opens as before.
+static bool MergedNfx(const char *host, char *out, size_t n) {
+    size_t len = strlen(host);
+    if (len < 9 || _stricmp(host + len - 9, "\\game.nfx")) return false;
+    std::string extra = std::string(g_gameDir) + "\\Misc\\ghostpc.nfx";
+    auto slurp = [](const std::string &f, std::string &d) {
+        FILE *fp = fopen(f.c_str(), "rb");
+        if (!fp) return false;
+        char buf[65536];
+        size_t k;
+        while ((k = fread(buf, 1, sizeof buf, fp)) > 0) d.append(buf, k);
+        fclose(fp);
+        return true;
+    };
+    std::string a, b;
+    if (!slurp(host, a) || !slurp(extra, b)) return false;
+    std::string merged = std::string(g_saveDir) + "\\ghostpc_game.nfx";
+    FILE *fp = fopen(merged.c_str(), "wb");
+    if (!fp) return false;
+    fwrite(a.data(), 1, a.size(), fp);
+    fwrite("\r\n", 1, 2, fp);
+    fwrite(b.data(), 1, b.size(), fp);
+    fclose(fp);
+    if (merged.size() + 1 > n) return false;
+    strcpy(out, merged.c_str());
+    Log("effects: game.nfx + Misc\\ghostpc.nfx (%u bytes)", (unsigned)b.size());
+    return true;
+}
+
+// game.nlx (the logbook / database: TITLE blocks of ENTRY lines, read once by cLogbook::Load) gets GhostPC's entries:
+// Misc\ghostpc.nlx lists "TITLE <block>" then ENTRY lines, each inserted before that block's ENDTITLE; the game is
+// handed <save>\ghostpc_game.nlx (game.nlx stays untouched). The Psi Blade's entry is hidden until its pickup
+// (psiblade.cpp: cLogbook::UnInvisEntry + UnlockEntry).
+static bool MergedNlx(const char *host, char *out, size_t n) {
+    size_t len = strlen(host);
+    if (len < 9 || _stricmp(host + len - 9, "\\game.nlx")) return false;
+    FILE *fa = fopen(host, "rb"), *fb = fopen((std::string(g_gameDir) + "\\Misc\\ghostpc.nlx").c_str(), "rb");
+    if (!fa || !fb) {
+        if (fa) fclose(fa);
+        if (fb) fclose(fb);
+        return false;
+    }
+    auto lines = [](FILE *f) {
+        std::vector<std::string> v;
+        char buf[1024];
+        while (fgets(buf, sizeof buf, f)) {
+            std::string l = buf;
+            while (!l.empty() && (l.back() == '\n' || l.back() == '\r')) l.pop_back();
+            v.push_back(l);
+        }
+        fclose(f);
+        return v;
+    };
+    auto word = [](const std::string &l, int k) {   // the k-th whitespace-separated word
+        size_t i = 0;
+        for (int w = 0;; w++) {
+            while (i < l.size() && isspace((unsigned char)l[i])) i++;
+            size_t j = i;
+            while (j < l.size() && !isspace((unsigned char)l[j])) j++;
+            if (w == k || j == i) return l.substr(i, j - i);
+            i = j;
+        }
+    };
+    std::vector<std::string> a = lines(fa), b = lines(fb);
+    std::vector<std::pair<std::string, std::string>> extra;   // (block, entry line)
+    std::string title;
+    for (auto &l : b) {
+        if (!_stricmp(word(l, 0).c_str(), "TITLE")) title = word(l, 1);
+        else if (!_stricmp(word(l, 0).c_str(), "ENTRY") && !title.empty()) extra.push_back({title, l});
+    }
+    std::string merged = std::string(g_saveDir) + "\\ghostpc_game.nlx";
+    FILE *fp = fopen(merged.c_str(), "wb");
+    if (!fp) return false;
+    int added = 0;
+    title.clear();
+    for (auto &l : a) {
+        std::string w = word(l, 0);
+        if (!_stricmp(w.c_str(), "TITLE")) title = word(l, 1);
+        if (!_stricmp(w.c_str(), "ENDTITLE")) {
+            for (auto &e : extra)
+                if (!_stricmp(e.first.c_str(), title.c_str())) fprintf(fp, "%s\n", e.second.c_str()), added++;
+            title.clear();
+        }
+        fprintf(fp, "%s\n", l.c_str());
+    }
+    fclose(fp);
+    if (merged.size() + 1 > n) return false;
+    strcpy(out, merged.c_str());
+    Log("logbook: game.nlx + Misc\\ghostpc.nlx (%d entries)", added);
+    return true;
+}
+
 XSTD(HANDLE, CreateFileA, 28, (LPCSTR name, DWORD acc, DWORD share, LPSECURITY_ATTRIBUTES sa, DWORD disp, DWORD flags, HANDLE tmpl)) {
     char p[MAX_PATH * 2];
     XboxPathToHost(name, p, sizeof p);
+    if (!(acc & GENERIC_WRITE)) MergedNfx(p, p, sizeof p) || MergedNlx(p, p, sizeof p);
     HANDLE h = CreateFileA(p, acc, share | FILE_SHARE_READ, sa, disp, flags & ~FILE_FLAG_NO_BUFFERING, tmpl);
     if (h == INVALID_HANDLE_VALUE) LOGV("CreateFile %s -> FAIL %u", name, GetLastError());
     else LOGV("CreateFile %s -> %p", name, h);

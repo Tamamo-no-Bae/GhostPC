@@ -1,17 +1,11 @@
 """Installs the compiled Enemy Zoo level (levels/zoo/out) into game/Levels and applies the post-compile patches that
-OpenNOD 0.6.7 cannot express:
+the OpenNOD SDK cannot express (the sky model and its unmasked flag come from the map's worldspawn since SDK 0.6.8):
 
-  * .nil: the ceiling was compiled with a placeholder texture (make_zoo_map.SKY_PLACEHOLDER, because the compiler rejects
-    archived materials); its 32-byte shader name becomes the global sky material, so the game does not draw it and the
-    sky model shows through. Its collision is untouched, so flyers stay in their rooms.
   * .nil: the Havok world bounds get 100 m of margin (see patch_bounds).
   * .nsd: music and environment fields copied from an original trailer (see patch_nsd_environment).
   * .nsd: track frames for placements that need them (the sniper boss's perches, see patch_nsd_frames).
-  * .nsd: the 192-byte trailer ends with two empty 32-byte names (sky model, sky animation); existing levels put the
-    sky model's name in both (e.g. MS_Sky_Refinery).
 """
 import os
-import re
 import shutil
 import struct
 import sys
@@ -19,7 +13,6 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 NAME = "9_1_1a_Enemy_Zoo"
-SKY_MODEL = "sky_Robota_02"   # clear blue skybox; all its materials are in the global 3dmaterials archive
 OUT = os.path.join(HERE, "out")
 # the game folder: GHOST_GAME_DIR, else ..\..\game (GhostPC workspace), else the parent folder (mapsrc in the
 # prototype's folder, as the patch installs it)
@@ -33,15 +26,6 @@ def field(name):
     b = name.encode("ascii")
     assert 0 < len(b) < 32
     return b + b"\0" * (32 - len(b))
-
-
-def patch_nil(data, old, new):
-    """rename one entry of the shader name table (32-byte NUL-padded names)"""
-    pat = field(old)
-    at = data.find(pat)
-    if at < 0 or data.find(pat, at + 1) >= 0:
-        raise SystemExit("shader name %s not found exactly once in the .nil" % old)
-    return data[:at] + field(new) + data[at + 32:]
 
 
 def physics_bounds_offset(d):
@@ -96,13 +80,6 @@ def patch_nsd_environment(data):
     return data[:t + 16] + src[16:128] + data[t + 128:]
 
 
-def patch_nsd(data, sky):
-    tail = data[-64:]
-    if tail.strip(b"\0") and tail != field(sky) * 2:
-        print("note: .nsd sky fields were not empty: %r" % tail.rstrip(b"\0"))
-    return data[:-64] + field(sky) + field(sky)
-
-
 def patch_nsd_frames(data, frames):
     """Give placements track frames (MAPtoNSD writes none). NSD v11 (maptonsd.cpp): 72-byte header, uint32 0, archive
     count + 32-byte names, placement count; per placement a modifier count, that many (uint32 id + 32-byte value)
@@ -146,22 +123,16 @@ def read_frames():
 
 
 def main():
-    # the placeholder/sky names as defined in the generator (read, not imported: importing would rewrite zoo.map)
-    src = open(os.path.join(HERE, "make_zoo_map.py"), encoding="utf-8").read()
-    m = re.search(r'^SKY_PLACEHOLDER, SKY_MATERIAL = "(\w+)", "(\w+)"', src, re.M)
-    if not m:
-        raise SystemExit("SKY_PLACEHOLDER/SKY_MATERIAL not found in make_zoo_map.py")
-    placeholder, sky_material = m.groups()
-
     files = {ext: os.path.join(OUT, NAME + ext) for ext in (".nil", ".nsd", ".npd")}
     missing = [f for f in files.values() if not os.path.exists(f)]
     if missing:
         raise SystemExit("missing compiler output: " + ", ".join(missing))
 
-    nil = patch_nil(open(files[".nil"], "rb").read(), placeholder, sky_material)
-    nil, old_b, new_b = patch_bounds(nil, 100.0)
+    nil, old_b, new_b = patch_bounds(open(files[".nil"], "rb").read(), 100.0)
     print("physics bounds %s -> %s" % ([round(v, 1) for v in old_b], [round(v, 1) for v in new_b]))
-    nsd = patch_nsd(patch_nsd_environment(open(files[".nsd"], "rb").read()), SKY_MODEL)
+    nsd = patch_nsd_environment(open(files[".nsd"], "rb").read())
+    sky = nsd[-64:-32].split(b"\0")[0].decode("latin-1")
+    print("sky model %s, %s" % (sky or "(none)", "unmasked" if struct.unpack_from("<I", nsd, 72)[0] & 2 else "masked"))
     frames = read_frames()
     nsd = patch_nsd_frames(nsd, frames)
     print("track frames: " + ", ".join("%s %d" % (k, len(v)) for k, v in frames.items()))
@@ -176,8 +147,7 @@ def main():
     shutil.copyfile(os.path.join(HERE, "zoo_goliath_222c.nms"), os.path.join(GAME, "3D", "Motions", "zoo_goliath_222c.nms"))
     # the Mutalisk's flight path (fly_path in the level script), written by make_zoo_map.py
     shutil.copyfile(os.path.join(HERE, "out_mutalisk_path.nad"), os.path.join(GAME, "3D", "Anims", "zoo_mutaliskFlyAround.nad"))
-    print("installed %s.nil/.nsd/.npd/.gpc/.nlfx into %s (ceiling %s -> %s, sky model %s)" % (
-        NAME, os.path.abspath(LEVELS), placeholder, sky_material, SKY_MODEL))
+    print("installed %s.nil/.nsd/.npd/.gpc/.nlfx into %s" % (NAME, os.path.abspath(LEVELS)))
 
 
 if __name__ == "__main__":

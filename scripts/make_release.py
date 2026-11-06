@@ -4,6 +4,7 @@
 # The patch's game-derived files (Strings, Misc, Sounds, UI images) are not in the repository: they stay as they are
 # in the local release/GhostPC_Patch folder. Update GhostPC_README.txt's changelog before running.
 import datetime
+import glob
 import os
 import shutil
 import sys
@@ -22,7 +23,30 @@ ARENA = os.path.join(ROOT, "levels", "arena")
 ARENA_LEVEL = "8_1_1a_Protoss_Arena"
 ARENA_SRC = ["make_arena_map.py", "install_arena.py", "arena.map", "out_levelscript.gpc", "out_effects.nlfx",
              "arena_overview.png", "menu_shot.png", "README.txt"]
-MENU_IMAGES = ["911a_MenuImage", "911a_MenuImageL", "811a_MenuImage", "811a_MenuImageL"]
+MENU_IMAGES = ["911a_MenuImage", "911a_MenuImageL", "811a_MenuImage", "811a_MenuImageL", "821a_MenuImage", "821a_MenuImageL",
+               "831a_MenuImage", "831a_MenuImageL", "921a_MenuImage", "921a_MenuImageL"]
+# the other GhostPC levels (installed by their install_*.py) and their sources: (level, folder, files, compile script)
+MORE_LEVELS = [
+    ("9_2_1a_Vehicle_Test", "vehicles", ["make_vehicle_map.py", "install_vehicles.py", "vehicle_test.map", "out_levelscript.gpc",
+                                         "out_effects.nlfx", "vehicle_overview.png", "menu_shot.png"], "compile_vehicles.bat"),
+    ("8_2_1a_Vehicle_Duel", "duel", ["make_duel_map.py", "install_duel.py", "duel.map", "out_levelscript.gpc", "out_effects.nlfx",
+                                     "duel_overview.png", "menu_shot.png"], "compile_duel.bat"),
+    ("8_3_1a_Blade_Arena", "bladearena", ["make_bladearena_map.py", "install_bladearena.py", "bladearena.map", "out_levelscript.gpc",
+                                          "out_effects.nlfx", "bladearena_overview.png", "menu_shot.png"], "compile_bladearena.bat"),
+]
+# GhostPC's other files in the game folder (made by its scripts; game-relative globs). Not here: Misc\game.nls (the
+# original string table, which the mission scripts also update: the build reads Strings\game.nls) and any change to an
+# original level (the Sabotage Protoss test stays local).
+GAME_FILES = [
+    "3D/Anims/nova43_K_*.nad", "3D/Anims/szlachta_bindpose.nad",
+    "3D/Materials/EchoDarkTemplar.dds", "3D/Materials/Echo_DT_New.dds", "3D/Materials/SzlachtaCombo.dds",
+    "3D/Models/nova_DT43*.nod", "3D/Models/novaVulture_echo.nod", "3D/Models/reaver_shield.nod", "3D/Models/Tanagazj_shield.nod", "3D/Models/szlachta.nod",
+    "3D/Motions/nova_psiblade.nms", "3D/Motions/Szlachta.nms",
+    "Materials/Stone/GPC_Ruins_*.dds",
+    "Misc/ghostpc.nfx", "Misc/ghostpc.nlx", "Misc/ghostpc_*.nlt", "Misc/Templates/ghostpc.not",
+    "Misc/ghostsp.nsc", "Misc/ghostmpcoop.nsc", "Misc/ghostmpcomp.nsc", "Strings/game.nls",
+    "Sounds/custom/**/*.wav",
+]
 
 
 def copy(src, dst):
@@ -43,6 +67,22 @@ def main():
              os.path.join(PATCH, "Levels", "%s.%s" % (ARENA_LEVEL, ext)))
     for n in MENU_IMAGES:   # mission-select pictures (make_menu_images.py)
         copy(os.path.join(GAME, "UI", "Materials", n + ".dds"), os.path.join(PATCH, "UI", "Materials", n + ".dds"))
+    for level, folder, srcs, bat_name in MORE_LEVELS:
+        for ext in ("nil", "nsd", "npd", "gpc", "nlfx"):
+            copy(os.path.join(GAME, "Levels", "%s.%s" % (level, ext)), os.path.join(PATCH, "Levels", "%s.%s" % (level, ext)))
+        src_dir = os.path.join(ROOT, "levels", folder)
+        for f in srcs:
+            copy(os.path.join(src_dir, f), os.path.join(PATCH, "mapsrc", folder, f))
+        lines = open(os.path.join(src_dir, bat_name), encoding="latin-1").read().splitlines()
+        lines = ['set "SDK=%~dp0..\\sdk"' if l.startswith('set "SDK=') else l for l in lines]
+        open(os.path.join(PATCH, "mapsrc", folder, bat_name), "w", encoding="latin-1", newline="\r\n").write(
+            "\n".join(lines) + "\n")
+    for pat in GAME_FILES:
+        found = glob.glob(os.path.join(GAME, pat), recursive=True)
+        if not found:
+            raise SystemExit("make_release: nothing matches " + pat)
+        for src in found:
+            copy(src, os.path.join(PATCH, os.path.relpath(src, GAME)))
     for f in ARENA_SRC:
         copy(os.path.join(ARENA, f), os.path.join(PATCH, "mapsrc", "arena", f))
     # the compile script with the SDK looked for in mapsrc/sdk (shared with compile_zoo.bat) or NOD_SDK_DIR
@@ -51,7 +91,8 @@ def main():
     os.makedirs(os.path.join(PATCH, "mapsrc", "arena"), exist_ok=True)
     open(os.path.join(PATCH, "mapsrc", "arena", "compile_arena.bat"), "w", encoding="latin-1", newline="\r\n").write(
         "\n".join(bat) + "\n")
-    for d, _, fs in os.walk(os.path.join(ROOT, "assets")):   # GhostPC's own data files (e.g. Materials\ghostpc.nsa)
+    for d, ds, fs in os.walk(os.path.join(ROOT, "assets")):   # GhostPC's own data files (e.g. Materials\ghostpc.nsa)
+        ds[:] = [x for x in ds if x != "source"]   # (assets\source: the source images, not game files)
         for f in fs:
             src = os.path.join(d, f)
             copy(src, os.path.join(PATCH, os.path.relpath(src, os.path.join(ROOT, "assets"))))

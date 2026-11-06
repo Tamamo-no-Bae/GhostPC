@@ -4,7 +4,7 @@
 # nothing is copied into the game folder.
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
-SDK="${NOD_SDK_DIR:-$HERE/sdk}"   # the OpenNOD SDK's folder (MAPtoNIL, MAPtoNSD, MAPtoNPD)
+SDK="${NOD_SDK_DIR:-$HERE/../sdk}"   # levels/sdk (OpenNOD SDK 0.6.8); NOD_SDK_DIR overrides
 ASSETS="$(cd "${GHOST_GAME_DIR:-$HERE/../../game}" && pwd)"
 MAP="$HERE/zoo.map"
 OUT="$HERE/out"

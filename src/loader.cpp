@@ -477,7 +477,8 @@ static LONG WINAPI CrashFilter(EXCEPTION_POINTERS *ep) {
     TerminateProcess(GetCurrentProcess(), 2);
     return EXCEPTION_EXECUTE_HANDLER;
 }
-// hang watchdog: no frame for 15 s while the game window has focus -> log it with the GhostPC step (once per stall)
+// hang watchdog: no frame for 6 s while the game window has focus -> log it with the GhostPC step and write
+// ghostpc_hang.dmp (once per stall)
 static DWORD WINAPI Watchdog(void *) {
     extern UINT g_frame;
     extern HWND g_hwnd;
@@ -489,9 +490,11 @@ static DWORD WINAPI Watchdog(void *) {
         UINT f = g_frame;
         bool focused = g_hwnd && GetForegroundWindow() == g_hwnd;
         if (f != last || !f || !focused) { last = f, still = 0, reported = false; continue; }
-        if (++still < 15 || reported) continue;
+        if (++still < 6 || reported) continue;
         reported = true;
-        Log("HANG: no frame for 15 s at frame %u, GhostPC step: %s", f, g_crumb);
+        // (6 s: a frozen game tends to be closed before 15; the dump has every thread's stack: where it is stuck)
+        Log("HANG: no frame for 6 s at frame %u, GhostPC step: %s", f, g_crumb);
+        WriteDump("ghostpc_hang.dmp", nullptr);
     }
 }
 

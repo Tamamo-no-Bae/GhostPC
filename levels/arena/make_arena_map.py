@@ -269,13 +269,22 @@ def template_type(name):
 PLACED = []
 
 
+# GhostPC's own templates (game\Misc\ghostpc.not, as on the Zoo): name -> the Global.not template it is based on
+GHOSTPC_TEMPLATES = {"powFlamethrower": "powFThrower"}   # the pickup that enables the flamethrower (src/vehicles.cpp)
+
+
 def tmpl(name, origin, yaw=0):
-    """native template placement, written the way nodsdk-radiant does (MAPtoNSD: case-sensitive Global.not names)"""
-    if not any(nm == name for nm, _ in notdump.idx):
+    """native template placement, written the way nodsdk-radiant does (MAPtoNSD: case-sensitive Global.not names;
+    the same archive list on every placement)"""
+    if name in GHOSTPC_TEMPLATES:
+        archive, ttype = "ghostpc.not", template_type(GHOSTPC_TEMPLATES[name])
+    elif not any(nm == name for nm, _ in notdump.idx):
         raise SystemExit("template name case: " + name)
+    else:
+        archive, ttype = "global.not", template_type(name)
     PLACED.append((name, tuple(origin), yaw))
     ent("nod_template_instance", origin, nod_authoring="map-template-v1", nod_template=name,
-        nod_template_archive="global.not", nod_template_archives="", nod_template_type=template_type(name),
+        nod_template_archive=archive, nod_template_archives="ghostpc.not", nod_template_type=ttype,
         angles="0 %g 0" % yaw)
 
 
@@ -309,7 +318,11 @@ assert {(x, round(-y, 3)) for x, y in RESPAWNS} == {(x, round(y, 3)) for x, y in
 # back corners, the spawn point (x 0, y 24) left clear
 for name, x, y in [("powHealth", -3.2, 19.5), ("powHealth", -3.2, 21.0), ("powEnergy", -3.2, 22.5), ("powEnergy", -3.2, 24.0),
                    ("powGauss_2x", 3.2, 19.5), ("powGauss_2x", 3.2, 21.0), ("powSnipe_2x", 3.2, 22.5), ("powGrenade", 3.2, 24.0),
-                   ("powSpiderMine", -3.2, 26.2), ("powProtection", 3.2, 26.2)]:
+                   ("powSpiderMine", -3.2, 26.2), ("powProtection", 3.2, 26.2),
+                   # (user) the flamethrower and its ammo by the other ammo (east half of the back wall), sticky grenades
+                   # by the spider mine. A flamethrower in each room: GhostPC's pickup rule leaves one in place until
+                   # both players have the weapon (src/vehicles.cpp FlameAmmoActivate)
+                   ("powFlamethrower", 1.6, 26.2), ("powFThrower", 3.2, 25.1), ("powCanisterSticky", -1.6, 26.2)]:
     mirrored(name, x, y)
 # left room: health and psi along the west wall, ammo and powerups along the north and south walls (mirrored)
 for name, x, y in [("powHealth", -34.2, 0.0), ("powHealth", -34.2, 1.5), ("powEnergy", -34.2, 3.0),
@@ -318,6 +331,7 @@ for name, x, y in [("powHealth", -34.2, 0.0), ("powHealth", -34.2, 1.5), ("powEn
     mirrored(name, x, y)
 tmpl("powProtection", (-31.0, 0.0, 0))
 tmpl("powSpiderMine", (-29.0, 0.0, 0))
+mirrored("powCanisterSticky", -29.0, 1.3)   # (user: sticky grenades with the spider mine)
 # central arena, scattered symmetrically (the origin, where the players are created, stays clear)
 for name, x, y in [("powHealth", 0.0, 9.0), ("powGauss_2x", -14.0, 3.0), ("powGauss_2x", 14.0, 3.0),
                    ("powSnipe_2x", 9.0, 15.5), ("powSnipe_2x", -9.0, 15.5)]:
@@ -407,11 +421,13 @@ with open(os.path.join(HERE, "out_levelscript.gpc"), "w", newline="\r\n") as f:
     f.write("player2_start %g %g %g %g\n" % (SPAWN_2[0] + OFFSET[0], SPAWN_2[1] + OFFSET[1], OFFSET[2], SPAWN_2[2]))
     for x, y in RESPAWNS:
         f.write("respawn %g %g %g %g\n" % (x + OFFSET[0], y + OFFSET[1], OFFSET[2], facing_centre(x, y)))
+    # the flamethrower: hidden until its pickup (powFlamethrower); the mission's AMMO line would give it from the start
+    f.write("noweapon flamethrower\n")
 
 # effect list: the pickups' effects plus the original lists' (only names in Misc\game.nfx)
 nfx = open(os.path.join(GAME, "Misc", "game.nfx"), "rb").read().lower()
 effects = [l.strip() for l in open(os.path.join(GAME, "Levels", "2_2_2a_Threat_BaseUpper.nlfx"), encoding="latin1") if l.strip()]
-for n in sorted({p[0] for p in PLACED}):
+for n in sorted({GHOSTPC_TEMPLATES.get(p[0], p[0]) for p in PLACED}):
     seen, t = set(), n
     while t and t.lower() not in seen:
         seen.add(t.lower())

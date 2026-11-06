@@ -2,6 +2,8 @@
 {
 "classname" "worldspawn"
 "nod_light_spacing" "128"
+"nod_sky_model" "sky_Robota_02.nod"
+"nod_sky_unmasked" "1"
 {
 ( -43.5 -294 -1.3 ) ( 158.5 -294 -1.3 ) ( 158.5 -182 -1.3 ) nod/AR_FloorSwirly_blu_01 0 0 0 0.0078125 0.0078125 0 0 0
 ( -43.5 -294 -0.3 ) ( -43.5 -182 -0.3 ) ( 158.5 -182 -0.3 ) nod/AR_FloorSwirly_blu_01 0 0 0 0.0078125 0.0078125 0 0 0
@@ -1466,14 +1468,6 @@
 ( 215.5 -182 4.7 ) ( 215.5 -182 5.7 ) ( 219.5 -182 5.7 ) nod/AR_Edge_Plain 0 0 0 0.03125 0.03125 0 0 0
 ( 215.5 -154 4.7 ) ( 219.5 -154 4.7 ) ( 219.5 -154 5.7 ) nod/AR_Edge_Plain 0 0 0 0.03125 0.03125 0 0 0
 }
-{
-( -43.5 -294 44.7 ) ( 221.5 -294 44.7 ) ( 221.5 28 44.7 ) nod/MS_Crater 0 0 0 0.46875 0.46875 0 0 0
-( -43.5 -294 45.7 ) ( -43.5 28 45.7 ) ( 221.5 28 45.7 ) nod/MS_Crater 0 0 0 0.46875 0.46875 0 0 0
-( -43.5 -294 44.7 ) ( -43.5 28 44.7 ) ( -43.5 28 45.7 ) nod/MS_Crater 0 0 0 0.46875 0.46875 0 0 0
-( 221.5 -294 44.7 ) ( 221.5 -294 45.7 ) ( 221.5 28 45.7 ) nod/MS_Crater 0 0 0 0.46875 0.46875 0 0 0
-( -43.5 -294 44.7 ) ( -43.5 -294 45.7 ) ( 221.5 -294 45.7 ) nod/MS_Crater 0 0 0 0.46875 0.46875 0 0 0
-( -43.5 28 44.7 ) ( 221.5 28 44.7 ) ( 221.5 28 45.7 ) nod/MS_Crater 0 0 0 0.46875 0.46875 0 0 0
-}
 }
 {
 "classname" "nod_template_instance"
@@ -1481,7 +1475,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "ghost"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 90 0"
 }
@@ -1939,7 +1933,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "gateway_building"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 0 0"
 }
@@ -1949,7 +1943,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "pylon"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 0 0"
 }
@@ -1959,7 +1953,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "shieldbattery_building"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 0 0"
 }
@@ -1969,7 +1963,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "nexus_building"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 0 0"
 }
@@ -1977,9 +1971,9 @@
 "classname" "nod_template_instance"
 "origin" "57.5 -251 -0.2"
 "nod_authoring" "map-template-v1"
-"nod_template" "reaver_prop"
-"nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template" "reaver_prop_small"
+"nod_template_archive" "ghostpc.not"
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 0 0"
 }
@@ -1989,7 +1983,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "bunker"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
@@ -1999,7 +1993,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "MissileTurret"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 0 0"
 }
@@ -2009,7 +2003,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "sunkenColony"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 180 0"
 }
@@ -2019,7 +2013,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "nydusCanal"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 180 0"
 }
@@ -2029,7 +2023,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "infestedCommandCenter"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 180 0"
 }
@@ -2039,7 +2033,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "sporeColony"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 180 0"
 }
@@ -2049,7 +2043,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "photonCannon"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 90 0"
 }
@@ -2059,7 +2053,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "crystalGuard"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 90 0"
 }
@@ -2069,7 +2063,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "scout"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 90 0"
 }
@@ -2079,7 +2073,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "shuttle"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 90 0"
 }
@@ -2089,7 +2083,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "observer"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 90 0"
 }
@@ -2099,7 +2093,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "dragoon"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 265 0"
 }
@@ -2109,7 +2103,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "zealot"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 260 0"
 }
@@ -2119,7 +2113,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "highTemplar"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 90 0"
 }
@@ -2129,7 +2123,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "probe"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 90 0"
 }
@@ -2139,9 +2133,29 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "purifier"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 90 0"
+}
+{
+"classname" "nod_template_instance"
+"origin" "-22.4 -85.6 -0.2"
+"nod_authoring" "map-template-v1"
+"nod_template" "Turret_player"
+"nod_template_archive" "global.not"
+"nod_template_archives" "ghostpc.not"
+"nod_template_type" "7"
+"angles" "0 0 0"
+}
+{
+"classname" "nod_template_instance"
+"origin" "166.4 -146.9 -0.2"
+"nod_authoring" "map-template-v1"
+"nod_template" "FlameTurret_player"
+"nod_template_archive" "global.not"
+"nod_template_archives" "ghostpc.not"
+"nod_template_type" "7"
+"angles" "0 315 0"
 }
 {
 "classname" "nod_template_instance"
@@ -2149,7 +2163,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "AR_psiDampener"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 180 0"
 }
@@ -2159,7 +2173,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "cloakGenerator"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 270 0"
 }
@@ -2169,7 +2183,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "Zangakar"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 180 0"
 }
@@ -2179,7 +2193,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "Solara"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 180 0"
 }
@@ -2189,7 +2203,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "auraKahn"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 180 0"
 }
@@ -2199,7 +2213,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "Khandalor"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 180 0"
 }
@@ -2209,7 +2223,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "darkArchon_cut"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 160 0"
 }
@@ -2219,7 +2233,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "Tanagazj"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 160 0"
 }
@@ -2229,7 +2243,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "Goliath"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 0 0"
 }
@@ -2239,7 +2253,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "miniScienceVessel"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 0 0"
 }
@@ -2249,7 +2263,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "TerranVulture"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 0 0"
 }
@@ -2259,7 +2273,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "firebat"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 0 0"
 }
@@ -2269,7 +2283,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "SCV_psi"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 0 0"
 }
@@ -2279,7 +2293,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "psiDampener"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 270 0"
 }
@@ -2289,7 +2303,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "Marine"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 314 0"
 }
@@ -2299,7 +2313,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "scientist"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 326 0"
 }
@@ -2309,7 +2323,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "scvDriver"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 117 0"
 }
@@ -2319,7 +2333,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "mechanic"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 164 0"
 }
@@ -2329,7 +2343,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "Trooper"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 288 0"
 }
@@ -2339,7 +2353,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "siegeTank"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 90 0"
 }
@@ -2349,7 +2363,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "hickson_cut"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 255 0"
 }
@@ -2359,7 +2373,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "dropship_cut"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 0 0"
 }
@@ -2369,7 +2383,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "wraith"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 90 0"
 }
@@ -2379,17 +2393,17 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "ghost_male"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 265 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "2.5 -107 -0.3"
+"origin" "2.5 -107 -0.2"
 "nod_authoring" "map-template-v1"
-"nod_template" "novaVulture_cut"
+"nod_template" "firebat_elite"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 254 0"
 }
@@ -2399,7 +2413,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "hauler_cut"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 241 0"
 }
@@ -2409,7 +2423,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "spiderMine"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 45 0"
 }
@@ -2419,7 +2433,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "Artemis_cut"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 263 0"
 "nod_prop_13" "dropship_cut"
@@ -2430,7 +2444,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "Marine10Den"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 180 0"
 }
@@ -2440,7 +2454,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "Marine2Joe"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 180 0"
 }
@@ -2450,7 +2464,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "Marine3Jethro"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 180 0"
 }
@@ -2460,7 +2474,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "Marine3Sacker"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 180 0"
 }
@@ -2470,7 +2484,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "Marine4Chuggins"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 180 0"
 }
@@ -2480,7 +2494,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "Marine5Lister"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 180 0"
 }
@@ -2490,7 +2504,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "Marine6Dai"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 180 0"
 }
@@ -2500,7 +2514,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "MarineSidekick"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 180 0"
 }
@@ -2510,7 +2524,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "Marine1_elite"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 275 0"
 }
@@ -2520,7 +2534,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "Marine2_elite"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 275 0"
 }
@@ -2530,7 +2544,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "Marine_captain_rebel"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 274 0"
 }
@@ -2540,7 +2554,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "Marine_captain_elite"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 275 0"
 }
@@ -2550,7 +2564,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "Vulcan"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 217 0"
 }
@@ -2560,7 +2574,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "Hauler_Boss"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 180 0"
 }
@@ -2570,7 +2584,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "Goliath_232"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 270 0"
 "nod_prop_15" "none"
@@ -2581,7 +2595,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "Goliath_222c"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 90 0"
 "nod_prop_43" "BOSSGOLIATH"
@@ -2593,7 +2607,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "sniper_boss"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 0 0"
 }
@@ -2603,7 +2617,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "mutalisk"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 0 0"
 }
@@ -2611,9 +2625,9 @@
 "classname" "nod_template_instance"
 "origin" "69.5 -107 -0.2"
 "nod_authoring" "map-template-v1"
-"nod_template" "ultralisk_cut"
+"nod_template" "testEnemy_old"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 180 0"
 }
@@ -2623,7 +2637,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "zergEgg"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 180 0"
 }
@@ -2633,7 +2647,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "larva"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 150 0"
 }
@@ -2643,7 +2657,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "zergling"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 180 0"
 }
@@ -2653,7 +2667,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "infestedSCVdriver"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 180 0"
 }
@@ -2663,7 +2677,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "zergPustule"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 0 0"
 }
@@ -2673,7 +2687,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "overlord"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 180 0"
 }
@@ -2683,7 +2697,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "hydralisk"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 182 0"
 }
@@ -2693,7 +2707,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "sporeColony_mini"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 180 0"
 }
@@ -2703,7 +2717,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "lurker_boss"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 77 0"
 }
@@ -2713,37 +2727,37 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "ultralisk"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 122 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "164 -203 -0.2"
+"origin" "165.2 -203 -0.2"
 "nod_authoring" "map-template-v1"
 "nod_template" "powEnergy"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "165.5 -203 -0.2"
+"origin" "166.3 -203 -0.2"
 "nod_authoring" "map-template-v1"
 "nod_template" "powGauss_2x"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "167 -203 -0.2"
+"origin" "167.4 -203 -0.2"
 "nod_authoring" "map-template-v1"
 "nod_template" "powGauss_2x"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
@@ -2753,67 +2767,97 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "powSnipe_2x"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "170 -203 -0.2"
+"origin" "169.6 -203 -0.2"
 "nod_authoring" "map-template-v1"
 "nod_template" "powGrenade"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "171.5 -203 -0.2"
+"origin" "170.7 -203 -0.2"
 "nod_authoring" "map-template-v1"
-"nod_template" "powGrenade"
+"nod_template" "powCanisterSmoke"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "173 -203 -0.2"
+"origin" "171.8 -203 -0.2"
 "nod_authoring" "map-template-v1"
 "nod_template" "powHealth"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "126.5 -67.5 -0.2"
+"origin" "172.9 -203 -0.2"
+"nod_authoring" "map-template-v1"
+"nod_template" "powCanisterSticky"
+"nod_template_archive" "global.not"
+"nod_template_archives" "ghostpc.not"
+"nod_template_type" "2"
+"angles" "0 0 0"
+}
+{
+"classname" "nod_template_instance"
+"origin" "174 -203 -0.2"
+"nod_authoring" "map-template-v1"
+"nod_template" "powHellfire"
+"nod_template_archive" "ghostpc.not"
+"nod_template_archives" "ghostpc.not"
+"nod_template_type" "2"
+"angles" "0 0 0"
+}
+{
+"classname" "nod_template_instance"
+"origin" "164.1 -203 -0.2"
+"nod_authoring" "map-template-v1"
+"nod_template" "powFThrower"
+"nod_template_archive" "global.not"
+"nod_template_archives" "ghostpc.not"
+"nod_template_type" "2"
+"angles" "0 0 0"
+}
+{
+"classname" "nod_template_instance"
+"origin" "126.5 -66.3 -0.2"
 "nod_authoring" "map-template-v1"
 "nod_template" "powEnergy"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "126.5 -66 -0.2"
+"origin" "126.5 -65.2 -0.2"
 "nod_authoring" "map-template-v1"
 "nod_template" "powGauss_2x"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "126.5 -64.5 -0.2"
+"origin" "126.5 -64.1 -0.2"
 "nod_authoring" "map-template-v1"
 "nod_template" "powGauss_2x"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
@@ -2823,67 +2867,97 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "powSnipe_2x"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "126.5 -61.5 -0.2"
+"origin" "126.5 -61.9 -0.2"
 "nod_authoring" "map-template-v1"
 "nod_template" "powGrenade"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "126.5 -60 -0.2"
+"origin" "126.5 -60.8 -0.2"
 "nod_authoring" "map-template-v1"
-"nod_template" "powGrenade"
+"nod_template" "powCanisterSmoke"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "126.5 -58.5 -0.2"
+"origin" "126.5 -59.7 -0.2"
 "nod_authoring" "map-template-v1"
 "nod_template" "powHealth"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "165.5 -141.5 -0.2"
+"origin" "126.5 -58.6 -0.2"
+"nod_authoring" "map-template-v1"
+"nod_template" "powCanisterSticky"
+"nod_template_archive" "global.not"
+"nod_template_archives" "ghostpc.not"
+"nod_template_type" "2"
+"angles" "0 0 0"
+}
+{
+"classname" "nod_template_instance"
+"origin" "126.5 -57.5 -0.2"
+"nod_authoring" "map-template-v1"
+"nod_template" "powHellfire"
+"nod_template_archive" "ghostpc.not"
+"nod_template_archives" "ghostpc.not"
+"nod_template_type" "2"
+"angles" "0 0 0"
+}
+{
+"classname" "nod_template_instance"
+"origin" "126.5 -67.4 -0.2"
+"nod_authoring" "map-template-v1"
+"nod_template" "powFThrower"
+"nod_template_archive" "global.not"
+"nod_template_archives" "ghostpc.not"
+"nod_template_type" "2"
+"angles" "0 0 0"
+}
+{
+"classname" "nod_template_instance"
+"origin" "165.5 -140.3 -0.2"
 "nod_authoring" "map-template-v1"
 "nod_template" "powEnergy"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "165.5 -140 -0.2"
+"origin" "165.5 -139.2 -0.2"
 "nod_authoring" "map-template-v1"
 "nod_template" "powGauss_2x"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "165.5 -138.5 -0.2"
+"origin" "165.5 -138.1 -0.2"
 "nod_authoring" "map-template-v1"
 "nod_template" "powGauss_2x"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
@@ -2893,67 +2967,97 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "powSnipe_2x"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "165.5 -135.5 -0.2"
+"origin" "165.5 -135.9 -0.2"
 "nod_authoring" "map-template-v1"
 "nod_template" "powGrenade"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "165.5 -134 -0.2"
+"origin" "165.5 -134.8 -0.2"
 "nod_authoring" "map-template-v1"
-"nod_template" "powGrenade"
+"nod_template" "powCanisterSmoke"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "165.5 -132.5 -0.2"
+"origin" "165.5 -133.7 -0.2"
 "nod_authoring" "map-template-v1"
 "nod_template" "powHealth"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "-4.5 -85.5 -0.2"
+"origin" "165.5 -132.6 -0.2"
+"nod_authoring" "map-template-v1"
+"nod_template" "powCanisterSticky"
+"nod_template_archive" "global.not"
+"nod_template_archives" "ghostpc.not"
+"nod_template_type" "2"
+"angles" "0 0 0"
+}
+{
+"classname" "nod_template_instance"
+"origin" "165.5 -131.5 -0.2"
+"nod_authoring" "map-template-v1"
+"nod_template" "powHellfire"
+"nod_template_archive" "ghostpc.not"
+"nod_template_archives" "ghostpc.not"
+"nod_template_type" "2"
+"angles" "0 0 0"
+}
+{
+"classname" "nod_template_instance"
+"origin" "165.5 -141.4 -0.2"
+"nod_authoring" "map-template-v1"
+"nod_template" "powFThrower"
+"nod_template_archive" "global.not"
+"nod_template_archives" "ghostpc.not"
+"nod_template_type" "2"
+"angles" "0 0 0"
+}
+{
+"classname" "nod_template_instance"
+"origin" "-4.5 -84.3 -0.2"
 "nod_authoring" "map-template-v1"
 "nod_template" "powEnergy"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "-4.5 -84 -0.2"
+"origin" "-4.5 -83.2 -0.2"
 "nod_authoring" "map-template-v1"
 "nod_template" "powGauss_2x"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "-4.5 -82.5 -0.2"
+"origin" "-4.5 -82.1 -0.2"
 "nod_authoring" "map-template-v1"
 "nod_template" "powGauss_2x"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
@@ -2963,67 +3067,97 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "powSnipe_2x"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "-4.5 -79.5 -0.2"
+"origin" "-4.5 -79.9 -0.2"
 "nod_authoring" "map-template-v1"
 "nod_template" "powGrenade"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "-4.5 -78 -0.2"
+"origin" "-4.5 -78.8 -0.2"
 "nod_authoring" "map-template-v1"
-"nod_template" "powGrenade"
+"nod_template" "powCanisterSmoke"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "-4.5 -76.5 -0.2"
+"origin" "-4.5 -77.7 -0.2"
 "nod_authoring" "map-template-v1"
 "nod_template" "powHealth"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "8 -80 -0.2"
+"origin" "-4.5 -76.6 -0.2"
+"nod_authoring" "map-template-v1"
+"nod_template" "powCanisterSticky"
+"nod_template_archive" "global.not"
+"nod_template_archives" "ghostpc.not"
+"nod_template_type" "2"
+"angles" "0 0 0"
+}
+{
+"classname" "nod_template_instance"
+"origin" "-4.5 -75.5 -0.2"
+"nod_authoring" "map-template-v1"
+"nod_template" "powHellfire"
+"nod_template_archive" "ghostpc.not"
+"nod_template_archives" "ghostpc.not"
+"nod_template_type" "2"
+"angles" "0 0 0"
+}
+{
+"classname" "nod_template_instance"
+"origin" "-4.5 -85.4 -0.2"
+"nod_authoring" "map-template-v1"
+"nod_template" "powFThrower"
+"nod_template_archive" "global.not"
+"nod_template_archives" "ghostpc.not"
+"nod_template_type" "2"
+"angles" "0 0 0"
+}
+{
+"classname" "nod_template_instance"
+"origin" "9.2 -80 -0.2"
 "nod_authoring" "map-template-v1"
 "nod_template" "powEnergy"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "9.5 -80 -0.2"
+"origin" "10.3 -80 -0.2"
 "nod_authoring" "map-template-v1"
 "nod_template" "powGauss_2x"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "11 -80 -0.2"
+"origin" "11.4 -80 -0.2"
 "nod_authoring" "map-template-v1"
 "nod_template" "powGauss_2x"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
@@ -3033,67 +3167,97 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "powSnipe_2x"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "14 -80 -0.2"
+"origin" "13.6 -80 -0.2"
 "nod_authoring" "map-template-v1"
 "nod_template" "powGrenade"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "15.5 -80 -0.2"
+"origin" "14.7 -80 -0.2"
 "nod_authoring" "map-template-v1"
-"nod_template" "powGrenade"
+"nod_template" "powCanisterSmoke"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "17 -80 -0.2"
+"origin" "15.8 -80 -0.2"
 "nod_authoring" "map-template-v1"
 "nod_template" "powHealth"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "35.5 -41 -0.2"
+"origin" "16.9 -80 -0.2"
+"nod_authoring" "map-template-v1"
+"nod_template" "powCanisterSticky"
+"nod_template_archive" "global.not"
+"nod_template_archives" "ghostpc.not"
+"nod_template_type" "2"
+"angles" "0 0 0"
+}
+{
+"classname" "nod_template_instance"
+"origin" "18 -80 -0.2"
+"nod_authoring" "map-template-v1"
+"nod_template" "powHellfire"
+"nod_template_archive" "ghostpc.not"
+"nod_template_archives" "ghostpc.not"
+"nod_template_type" "2"
+"angles" "0 0 0"
+}
+{
+"classname" "nod_template_instance"
+"origin" "8.1 -80 -0.2"
+"nod_authoring" "map-template-v1"
+"nod_template" "powFThrower"
+"nod_template_archive" "global.not"
+"nod_template_archives" "ghostpc.not"
+"nod_template_type" "2"
+"angles" "0 0 0"
+}
+{
+"classname" "nod_template_instance"
+"origin" "35.5 -39.8 -0.2"
 "nod_authoring" "map-template-v1"
 "nod_template" "powEnergy"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "35.5 -39.5 -0.2"
+"origin" "35.5 -38.7 -0.2"
 "nod_authoring" "map-template-v1"
 "nod_template" "powGauss_2x"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "35.5 -38 -0.2"
+"origin" "35.5 -37.6 -0.2"
 "nod_authoring" "map-template-v1"
 "nod_template" "powGauss_2x"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
@@ -3103,67 +3267,97 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "powSnipe_2x"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "35.5 -35 -0.2"
+"origin" "35.5 -35.4 -0.2"
 "nod_authoring" "map-template-v1"
 "nod_template" "powGrenade"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "35.5 -33.5 -0.2"
+"origin" "35.5 -34.3 -0.2"
 "nod_authoring" "map-template-v1"
-"nod_template" "powGrenade"
+"nod_template" "powCanisterSmoke"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "35.5 -32 -0.2"
+"origin" "35.5 -33.2 -0.2"
 "nod_authoring" "map-template-v1"
 "nod_template" "powHealth"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "45.5 -32.5 -0.2"
+"origin" "35.5 -32.1 -0.2"
+"nod_authoring" "map-template-v1"
+"nod_template" "powCanisterSticky"
+"nod_template_archive" "global.not"
+"nod_template_archives" "ghostpc.not"
+"nod_template_type" "2"
+"angles" "0 0 0"
+}
+{
+"classname" "nod_template_instance"
+"origin" "35.5 -31 -0.2"
+"nod_authoring" "map-template-v1"
+"nod_template" "powHellfire"
+"nod_template_archive" "ghostpc.not"
+"nod_template_archives" "ghostpc.not"
+"nod_template_type" "2"
+"angles" "0 0 0"
+}
+{
+"classname" "nod_template_instance"
+"origin" "35.5 -40.9 -0.2"
+"nod_authoring" "map-template-v1"
+"nod_template" "powFThrower"
+"nod_template_archive" "global.not"
+"nod_template_archives" "ghostpc.not"
+"nod_template_type" "2"
+"angles" "0 0 0"
+}
+{
+"classname" "nod_template_instance"
+"origin" "45.5 -31.3 -0.2"
 "nod_authoring" "map-template-v1"
 "nod_template" "powEnergy"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "45.5 -31 -0.2"
+"origin" "45.5 -30.2 -0.2"
 "nod_authoring" "map-template-v1"
 "nod_template" "powGauss_2x"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "45.5 -29.5 -0.2"
+"origin" "45.5 -29.1 -0.2"
 "nod_authoring" "map-template-v1"
 "nod_template" "powGauss_2x"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
@@ -3173,67 +3367,97 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "powSnipe_2x"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "45.5 -26.5 -0.2"
+"origin" "45.5 -26.9 -0.2"
 "nod_authoring" "map-template-v1"
 "nod_template" "powGrenade"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "45.5 -25 -0.2"
+"origin" "45.5 -25.8 -0.2"
 "nod_authoring" "map-template-v1"
-"nod_template" "powGrenade"
+"nod_template" "powCanisterSmoke"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "45.5 -23.5 -0.2"
+"origin" "45.5 -24.7 -0.2"
 "nod_authoring" "map-template-v1"
 "nod_template" "powHealth"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "31 -23 -0.2"
+"origin" "45.5 -23.6 -0.2"
+"nod_authoring" "map-template-v1"
+"nod_template" "powCanisterSticky"
+"nod_template_archive" "global.not"
+"nod_template_archives" "ghostpc.not"
+"nod_template_type" "2"
+"angles" "0 0 0"
+}
+{
+"classname" "nod_template_instance"
+"origin" "45.5 -22.5 -0.2"
+"nod_authoring" "map-template-v1"
+"nod_template" "powHellfire"
+"nod_template_archive" "ghostpc.not"
+"nod_template_archives" "ghostpc.not"
+"nod_template_type" "2"
+"angles" "0 0 0"
+}
+{
+"classname" "nod_template_instance"
+"origin" "45.5 -32.4 -0.2"
+"nod_authoring" "map-template-v1"
+"nod_template" "powFThrower"
+"nod_template_archive" "global.not"
+"nod_template_archives" "ghostpc.not"
+"nod_template_type" "2"
+"angles" "0 0 0"
+}
+{
+"classname" "nod_template_instance"
+"origin" "32.2 -23 -0.2"
 "nod_authoring" "map-template-v1"
 "nod_template" "powEnergy"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "32.5 -23 -0.2"
+"origin" "33.3 -23 -0.2"
 "nod_authoring" "map-template-v1"
 "nod_template" "powGauss_2x"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "34 -23 -0.2"
+"origin" "34.4 -23 -0.2"
 "nod_authoring" "map-template-v1"
 "nod_template" "powGauss_2x"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
@@ -3243,37 +3467,67 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "powSnipe_2x"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "37 -23 -0.2"
+"origin" "36.6 -23 -0.2"
 "nod_authoring" "map-template-v1"
 "nod_template" "powGrenade"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "38.5 -23 -0.2"
+"origin" "37.7 -23 -0.2"
 "nod_authoring" "map-template-v1"
-"nod_template" "powGrenade"
+"nod_template" "powCanisterSmoke"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
 {
 "classname" "nod_template_instance"
-"origin" "40 -23 -0.2"
+"origin" "38.8 -23 -0.2"
 "nod_authoring" "map-template-v1"
 "nod_template" "powHealth"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
+"nod_template_type" "2"
+"angles" "0 0 0"
+}
+{
+"classname" "nod_template_instance"
+"origin" "39.9 -23 -0.2"
+"nod_authoring" "map-template-v1"
+"nod_template" "powCanisterSticky"
+"nod_template_archive" "global.not"
+"nod_template_archives" "ghostpc.not"
+"nod_template_type" "2"
+"angles" "0 0 0"
+}
+{
+"classname" "nod_template_instance"
+"origin" "41 -23 -0.2"
+"nod_authoring" "map-template-v1"
+"nod_template" "powHellfire"
+"nod_template_archive" "ghostpc.not"
+"nod_template_archives" "ghostpc.not"
+"nod_template_type" "2"
+"angles" "0 0 0"
+}
+{
+"classname" "nod_template_instance"
+"origin" "31.1 -23 -0.2"
+"nod_authoring" "map-template-v1"
+"nod_template" "powFThrower"
+"nod_template_archive" "global.not"
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
@@ -3283,7 +3537,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "powHealth"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
@@ -3293,7 +3547,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "powGauss_2x"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
@@ -3303,7 +3557,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "powSnipe_2x"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
@@ -3313,7 +3567,77 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "powEnergy"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
+"nod_template_type" "2"
+"angles" "0 0 0"
+}
+{
+"classname" "nod_template_instance"
+"origin" "-35.5 -189.8 -0.2"
+"nod_authoring" "map-template-v1"
+"nod_template" "powCanisterSmoke"
+"nod_template_archive" "global.not"
+"nod_template_archives" "ghostpc.not"
+"nod_template_type" "2"
+"angles" "0 0 0"
+}
+{
+"classname" "nod_template_instance"
+"origin" "-34.5 -189.8 -0.2"
+"nod_authoring" "map-template-v1"
+"nod_template" "powCanisterSticky"
+"nod_template_archive" "global.not"
+"nod_template_archives" "ghostpc.not"
+"nod_template_type" "2"
+"angles" "0 0 0"
+}
+{
+"classname" "nod_template_instance"
+"origin" "-33.5 -189.8 -0.2"
+"nod_authoring" "map-template-v1"
+"nod_template" "powHellfire"
+"nod_template_archive" "ghostpc.not"
+"nod_template_archives" "ghostpc.not"
+"nod_template_type" "2"
+"angles" "0 0 0"
+}
+{
+"classname" "nod_template_instance"
+"origin" "-41.3 -184.4 -0.2"
+"nod_authoring" "map-template-v1"
+"nod_template" "powSpiderMine"
+"nod_template_archive" "global.not"
+"nod_template_archives" "ghostpc.not"
+"nod_template_type" "2"
+"angles" "0 0 0"
+}
+{
+"classname" "nod_template_instance"
+"origin" "-40.3 -184.4 -0.2"
+"nod_authoring" "map-template-v1"
+"nod_template" "powFireFly"
+"nod_template_archive" "global.not"
+"nod_template_archives" "ghostpc.not"
+"nod_template_type" "2"
+"angles" "0 0 0"
+}
+{
+"classname" "nod_template_instance"
+"origin" "-39.3 -184.4 -0.2"
+"nod_authoring" "map-template-v1"
+"nod_template" "powMantis"
+"nod_template_archive" "global.not"
+"nod_template_archives" "ghostpc.not"
+"nod_template_type" "2"
+"angles" "0 0 0"
+}
+{
+"classname" "nod_template_instance"
+"origin" "155 -67 -0.2"
+"nod_authoring" "map-template-v1"
+"nod_template" "powFlamethrower"
+"nod_template_archive" "ghostpc.not"
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "2"
 "angles" "0 0 0"
 }
@@ -3323,7 +3647,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "rhynadon_prop"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 0 0"
 }
@@ -3333,7 +3657,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "Nova_mask_cut"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 90 0"
 }
@@ -3343,7 +3667,7 @@
 "nod_authoring" "map-template-v1"
 "nod_template" "beacon"
 "nod_template_archive" "global.not"
-"nod_template_archives" ""
+"nod_template_archives" "ghostpc.not"
 "nod_template_type" "0"
 "angles" "0 0 0"
 }

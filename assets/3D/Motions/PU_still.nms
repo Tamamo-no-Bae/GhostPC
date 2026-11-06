@@ -1,0 +1,4 @@
+; PU_still.nms -- GhostPC: the flamethrower pickup (PU_FlameRifle.nod) lies still; PU_generic.nms spins
+; (scripts/make_flame_pickup.py)
+
+stand				PU_still.nad		lowpriority

@@ -44,10 +44,28 @@ Files in this patch:
                          the Enemy Zoo Mutalisk's flight path (new)
   3D\Motions\zoo_goliath_222c.nms
                          the Enemy Zoo's cut Goliath boss motion set (new)
-  Sounds\custom\         added unit sounds, StarCraft's own (new, see CUSTOM SOUNDS)
-  mapsrc\                the Enemy Zoo's source and build scripts, the Protoss Arena's in
-                         mapsrc\arena (not needed to play, see their README.txt; built with the
-                         OpenNOD SDK, github.com/aknavj/nodsdk-scghost)
+  Levels\9_2_1a_Vehicle_Test.*, 8_2_1a_Vehicle_Duel.*, 8_3_1a_Blade_Arena.*
+                         the Vehicle Test map (single player and co-op) and the two new
+                         competitive maps, Vehicle Duel and Blade Arena (new levels)
+  UI\Materials\921a_*, 821a_*, 831a_*
+                         their mission-select pictures (new)
+  Misc\Templates\ghostpc.not, Misc\ghostpc.nfx
+                         GhostPC's own templates and effects: the Reaver and Dragoon vehicles, the
+                         Scarab, the Psi Blade pickup (new)
+  Misc\ghostpc.nlx, ghostpc_PsiBlade.nlt, ghostpc_Flamethrower.nlt
+                         database entries for the Psi Blade and the flamethrower (new)
+  3D\Models, 3D\Materials, 3D\Anims, 3D\Motions
+                         Nova and Echo in Dark Templar armour with the Psi Blade and its
+                         animations, protoss shield shells, Echo on the Vulture, the Szlachta
+                         (new)
+  Materials\Stone\GPC_Ruins_*.dds
+                         the Blade Arena's ruins textures (new)
+  Sounds\custom\         added unit and vehicle sounds, mostly StarCraft's own (new, see
+                         CUSTOM SOUNDS)
+  mapsrc\                the Enemy Zoo's source and build scripts; the other maps' in
+                         mapsrc\arena, vehicles, duel and bladearena (not needed to play, see
+                         mapsrc\README.txt; built with the OpenNOD SDK,
+                         github.com/aknavj/nodsdk-scghost)
 
 Requirements: Windows 10 or 11 (uses the system's d3d9, XAudio2.9, XInput 9.1.0 and
 d3dcompiler_47), any Direct3D 9 capable GPU.
@@ -154,7 +172,8 @@ mission ("Echo fell to her death."). Co-op has its own progress (its own save sl
 named NOVA unlocks every mission.
 
 Competitive: 2 Players (4 Players is for a later patch), Nova against Echo in the Protoss Arena, a
-symmetric map with four pillars, side rooms, corridors and plenty of pickups. A dead player
+symmetric map with four pillars, side rooms, corridors and plenty of pickups; the Vehicle Duel,
+with vehicles for both sides; or the Blade Arena, Psi Blades only. A dead player
 revives on a button press at a random respawn point, away from her opponent. Kills count for the
 shooter (grenades included; your own death doesn't count). The match timer
 (top of the screen) runs for the time limit set in the settings window, pausing in the pause menu.
@@ -167,8 +186,42 @@ CUSTOM SOUNDS
 -------------
 Some units' sound banks are missing their attack sounds in this build. GhostPC plays WAV files
 from Sounds\custom\<sound bank>\<cue>.wav in place of a bank cue (or where it is missing), with
-~2, ~3 ... for random variants. Included: the Sunken Colony and the Lurker boss (StarCraft's
-own sounds).
+~2, ~3 ... for random variants; a folder named after a template (Sounds\custom\<template>\) is
+used before its sound bank's. Included: the Sunken Colony, the Lurker boss, the Reaver and its
+Scarab, the Vulture's engine, shots and grenades (StarCraft's own sounds where it had them), the
+flame turret and the Psi Blade.
+
+
+CHANGES (2026-11-06)
+--------------------
+- New maps:
+  - Vehicle Test map (after the Enemy Zoo): a track with every player vehicle (Vulture, Siege
+    Tank, Goliath, Dragoon, Reaver, turrets) and enemies to try them on, among them an enemy
+    Siege Tank.
+  - Competitive: Vehicle Duel (symmetric, Vultures and Dragoons on each side, a Goliath in the
+    middle) and Blade Arena (round ruins with a pillar, Psi Blade only: no guns, no equipment).
+- Player vehicles:
+  - Reaver (new): worked from its console (Nova stays at it and returns to it when the Reaver is
+    destroyed), Scarabs that seek the target under the crosshair (not while moving), crushes what
+    it drives into, its own sounds, explodes when destroyed.
+  - Dragoon (new): walks, fires its plasma at the crosshair.
+  - Reaver and Dragoon have shields, with a shield bar under the vehicle's health bar.
+  - Enemies see and attack driven vehicles at once, and melee units (Zealots, Zerglings) can
+    reach a vehicle's hull.
+  - Vulture: engine sounds (idle, start, run, stop), StarCraft's shot and grenade sounds, Echo
+    rides it in her own suit, it rights itself after flipping.
+  - Spider Mine, Firefly and Mantis are drivable; turrets show their health and have better
+    cameras; the flame turret has its sound.
+- Psi Blade (new): Tanagazj drops it; Nova (or Echo) turns into her Dark Templar armour with the
+  blade, its combo, a plunge attack from the air and a shield. In co-op both players can carry it.
+- Weapons: the flamethrower (a pickup, the rifle on the ground, in the Protoss Arena and test
+  maps), sticky, hellfire and
+  smoke grenades as pickups. The Firefly can no longer kill bosses, buildings, cutscene units,
+  flyers or large machines in one hit.
+- Shadows: vehicles' and characters' shadows are no longer cut off and stay at a distance.
+- Units no longer lose body parts at a distance (the Hydralisk's tail and legs).
+- Enemy Zoo: player turrets, the Szlachta (a creature from Nihilistic's Vampire: The
+  Masquerade - Redemption demo, converted), the irradiate and colony fixes.
 
 
 CHANGES (2026-10-29)

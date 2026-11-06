@@ -8,6 +8,12 @@ notify 43.5 -36 -5 82.5 -15 20 cAIBossGoliath 0
 player_start -37.5 -187 -0.3 0
 props_start stand
 props_player_only
+inventory smokegrenade 5
+inventory stickygrenade 5
+inventory hellfiregrenade 5
+noweapon flamethrower
 unpin cAIBossUltralisk
+dormant -1.5 -82 -5 37.5 -48 20 cAIBossHauler
+dormant 163.5 -153 -5 223.5 -93 20 cAIBossUltralisk
 sunken_los
 fly_path cAIZergMutalisk zoo_mutaliskFlyAround 30

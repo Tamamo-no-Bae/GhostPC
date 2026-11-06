@@ -1,0 +1,9 @@
+; Szlachta.nms -- GhostPC: the Szlachta (testEnemy_old) from Vampire: The Masquerade - Redemption's demo has no
+; animations (its motion set is not in the demo): every mode the actor code plays is its bind pose
+; (scripts/convert_redemption_nod.py)
+
+stand				szlachta_bindpose.nad
+create				szlachta_bindpose.nad		noloop endpause
+hurt				szlachta_bindpose.nad		noloop
+deathslow			szlachta_bindpose.nad		noloop endpause
+deathquick			szlachta_bindpose.nad		noloop endpause
