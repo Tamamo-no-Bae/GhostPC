@@ -216,12 +216,13 @@ CHANGES (2026-11-06)
   blade, its combo, a plunge attack from the air and a shield. In co-op both players can carry it.
 - Weapons: the flamethrower (a pickup, the rifle on the ground, in the Protoss Arena and test
   maps), sticky, hellfire and
-  smoke grenades as pickups. The Firefly can no longer kill bosses, buildings, cutscene units,
+  smoke grenades as pickups. Picking up the flamethrower or the Psi Blade says so. The Firefly can no longer kill bosses, buildings, cutscene units,
   flyers or large machines in one hit.
 - Shadows: vehicles' and characters' shadows are no longer cut off and stay at a distance.
 - Units no longer lose body parts at a distance (the Hydralisk's tail and legs).
 - Enemy Zoo: player turrets, the Szlachta (a creature from Nihilistic's Vampire: The
   Masquerade - Redemption demo, converted), the irradiate and colony fixes.
+- Co-op: restarting the level while Echo is dead brings her (and her HUD) back.
 
 
 CHANGES (2026-10-29)
